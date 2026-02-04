@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+  <base href="./">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mevra ❤️ Mizra</title>
@@ -68,6 +69,7 @@
   <div id="site" class="site" hidden>
 
     <header class="header">
+  <base href="./">
       <div class="header-inner">
         <div>
           <h1>Mevra ❤️ Mizra</h1>
@@ -131,7 +133,7 @@
       <section id="home" class="page active">
         <h2>Hoş Geldin</h2>
         <p class="muted">
-          Burası sadece bizim için. Anılar burada birikir; kelimeler saklanır, geleceğe küçük notlar düşeriz.
+          Bu site sadece bizim hikâyemiz için var. Burada anılar birikir, kelimeler saklanır ve geleceğe notlar bırakılır.
         </p>
 
         <div class="grid2 mt16">
@@ -218,11 +220,10 @@
             </div>
 
             <div class="field">
-              <label class="label" for="memoryImage">Görseller (çoklu seçebilirsin)</label>
-              <input type="file" id="memoryImage" accept="image/*" multiple />
+              <label class="label" for="memoryImage">Görsel</label>
+              <input type="file" id="memoryImage" accept="image/*" />
               <div id="memoryImagePreview" class="img-preview" hidden>
                 <img id="memoryImagePreviewImg" alt="Seçilen görsel önizleme" />
-                <div id="memoryImagePreviewHint" class="tiny muted mt8"></div>
                 <button class="ghost mini" id="memoryImageClearBtn" type="button">Kaldır</button>
               </div>
             </div>
@@ -461,12 +462,6 @@
               <label class="checkbox" style="margin:0;">
                 <input type="checkbox" id="soundToggle" />
                 <span>Ses</span>
-              </label>
-              <label class="checkbox" style="margin:0;">
-                <input type="checkbox" id="musicToggle" />
-                <span>Müzik</span>
-              </label>
-              <label class="checkbox" style="margin:0;">
               </label>
               <select id="difficulty" class="select" aria-label="Zorluk">
                 <option value="normal">Normal</option>
