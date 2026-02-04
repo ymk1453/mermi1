@@ -1,0 +1,6 @@
+Bu paket GitHub Pages alt-dizin (/mermi1/) için absolute-path (/) problemini otomatik düzelterek üretildi.
+Build: 2026-02-04T09:58:20Z
+Eğer eski SW cache yüzünden hâlâ sorun görürsen:
+- Tarayıcıda site açıkken Ctrl+Shift+R
+- Uygulama > Service Workers: Unregister
+- Application > Storage: Clear site data
