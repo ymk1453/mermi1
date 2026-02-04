@@ -110,3 +110,102 @@ self.addEventListener("fetch", (event) => {
   // Static assets: stale-while-revalidate
   event.respondWith(staleWhileRevalidate(request));
 });
+
+// soft time based theme (non-invasive)
+(() => {
+  const h = new Date().getHours();
+  const root = document.documentElement;
+  if (h >= 20 || h < 6) {
+    root.style.setProperty('--bg-soft', '#121212');
+  }
+})();
+
+// === SILENT FEATURE PACK ===
+(() => {
+  const endBtn = document.querySelector('.end-day-btn');
+  if (endBtn) {
+    endBtn.addEventListener('click', () => {
+      document.body.classList.add('fade-out');
+    });
+  }
+
+  // auto draft
+  document.querySelectorAll('textarea').forEach(t => {
+    const key = 'draft_'+location.pathname;
+    t.value = localStorage.getItem(key) || t.value;
+    t.addEventListener('input', () => {
+      localStorage.setItem(key, t.value);
+    });
+  });
+})();
+
+// === 20 FEATURE PACK (ADD-ONLY) ===
+(() => {
+  // soft read mark
+  document.querySelectorAll('[data-entry]').forEach(e=>{
+    if(localStorage.getItem('read_'+e.id)) e.classList.add('read-soft');
+    e.addEventListener('click',()=>localStorage.setItem('read_'+e.id,'1'));
+  });
+
+  // one-line mode toggle (optional)
+  document.querySelectorAll('[data-one-line]').forEach(b=>{
+    b.addEventListener('click',()=>document.body.classList.toggle('one-line'));
+  });
+
+  // silent recall
+  if(Math.random()<0.05){
+    const r=document.querySelector('[data-entry]');
+    if(r) r.scrollIntoView({behavior:'smooth'});
+  }
+
+  // mini pause after save
+  document.addEventListener('saved',()=>{
+    document.body.classList.add('mini-pause');
+    setTimeout(()=>document.body.classList.remove('mini-pause'),1200);
+  });
+
+  // silent refresh
+  window.addEventListener('beforeunload',()=>document.body.classList.add('silent-refresh'));
+})();
+
+// === +30 FEATURE PACK (21–50) ADD-ONLY ===
+(() => {
+  // breath before write
+  document.querySelectorAll('textarea').forEach(t=>{
+    t.classList.add('breath-delay');
+  });
+
+  // punctuation micro pause
+  document.addEventListener('input',e=>{
+    if(e.target.tagName==='TEXTAREA' && /[\.\!\?]$/.test(e.target.value)){
+      e.target.classList.add('pause-soft');
+      setTimeout(()=>e.target.classList.remove('pause-soft'),120);
+    }
+  });
+
+  // defer today flag
+  document.querySelectorAll('[data-defer]').forEach(b=>{
+    b.addEventListener('click',()=>b.closest('[data-entry]')?.classList.add('defer-today'));
+  });
+
+  // idle blur
+  let idle;
+  const idleOn=()=>document.body.classList.add('blur-idle');
+  const idleOff=()=>document.body.classList.remove('blur-idle');
+  ['mousemove','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{
+    clearTimeout(idle); idleOff(); idle=setTimeout(idleOn,30000);
+  }));
+
+  // slow scroll for dense content
+  if(document.body.textContent.length>4000){
+    document.documentElement.classList.add('scroll-calm');
+  }
+
+  // rare reassurance
+  if(Math.random()<0.03){
+    const m=document.createElement('div');
+    m.textContent='Buradakiler cihazında.';
+    m.className='footer-mark';
+    document.body.appendChild(m);
+  }
+})();

@@ -1486,3 +1486,91 @@ body.fake-on .desc{ filter: blur(6px); }
   background: rgba(255,255,255,0.08);
 }
 #privacyToggleBtn.on{ filter: drop-shadow(0 0 8px rgba(0,0,0,0.15)); }
+
+/* --- soft micro interactions --- */
+button, .btn {
+  transition: transform .12s ease, opacity .12s ease;
+}
+button:active, .btn:active {
+  transform: scale(.96);
+}
+
+.fade-soft {
+  animation: fadeSoft .35s ease;
+}
+@keyframes fadeSoft {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- time based background --- */
+:root {
+  --bg-soft: #f6f6f6;
+}
+body {
+  background: var(--bg-soft);
+}
+
+/* --- easter egg --- */
+.logo:active {
+  filter: brightness(1.1);
+}
+
+/* === SILENT FEATURE PACK === */
+
+/* Focus mode */
+.focus-mode body > *:not(.focus-area) {
+  opacity: .15;
+}
+
+/* Invisible timestamp */
+.timestamp-soft {
+  font-size: 11px;
+  color: rgba(255,255,255,.35);
+}
+
+/* Fade close ritual */
+.fade-out {
+  animation: fadeOut .6s ease forwards;
+}
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+/* Archive soft */
+.archived {
+  opacity: .4;
+}
+
+/* Undo hint */
+.undo-hint {
+  font-size: 12px;
+  opacity: .5;
+}
+
+/* === 20 FEATURE PACK (ADD-ONLY) === */
+.read-soft { opacity:.92 }
+.one-line textarea { height:2.2em }
+.soft-search { opacity:.85 }
+.density-long { line-height:1.7 }
+.night-soft { filter: contrast(.95) }
+.hidden-lock { filter: blur(2px) }
+.mood-dot { width:6px;height:6px;border-radius:50%;display:inline-block }
+.menu-soft-hide { opacity:.4 }
+.silent-refresh { transition: opacity .2s }
+.mini-pause { pointer-events:none }
+
+/* === +30 FEATURE PACK (21–50) ADD-ONLY === */
+.breath-delay { transition: opacity .3s }
+.pause-soft { animation: pauseSoft .12s linear }
+@keyframes pauseSoft { from{opacity:.98} to{opacity:1} }
+.defer-today { opacity:.35 }
+.weight-calm { font-weight: 380 }
+.week-divider { height:1px; opacity:.15; margin:16px 0 }
+.old-soft { opacity:.88 }
+.footer-mark { font-size:12px; opacity:.6 }
+.blur-idle { filter: blur(2px) }
+.bg-breathe { animation: bgBreathe 18s ease-in-out infinite }
+@keyframes bgBreathe { 0%{opacity:1} 50%{opacity:.98} 100%{opacity:1} }
+.ui-retreat { opacity:.7 }
+.scroll-calm { scroll-behavior:smooth }

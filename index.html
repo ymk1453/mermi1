@@ -47,7 +47,7 @@
       <p>Özel Evrenimize Giriş</p>
 
       <label class="sr-only" for="loginPassword">Şifre</label>
-      <input type="password" id="loginPassword" placeholder="Şifre" autocomplete="current-password" />
+      <input type="password" id="loginPassword" placeholder="Şifre (buraya yaz)" autocomplete="current-password" />
 
       <div class="row">
         <label class="checkbox">
@@ -57,7 +57,7 @@
         <button class="ghost" id="hintBtn" type="button" title="İpucu">?</button>
       </div>
 
-      <button class="primary" id="loginBtn" type="button">Devam Et</button>
+      <button class="primary" id="loginBtn" type="button">Devam Et · İçeriğine geç</button>
       <span id="loginError" class="error" role="status"></span>
 
       <div class="tiny muted">
@@ -155,7 +155,7 @@
           <div class="card">
             <h3>Hızlı Kısayollar</h3>
             <div class="chips">
-              <button class="chip" data-jump="memories" type="button">Yeni bir anı bırak</button>
+              <button class="chip" data-jump="memories" type="button">Yeni bir anı bırak · İstediğin zaman düzenleyebilirsin</button>
               <button class="chip" data-jump="diary" type="button">Bir şey yaz</button>
               <button class="chip" data-jump="special" type="button">Özel gün ekle</button>
               <button class="chip" data-jump="game" type="button">Kalp oyunu</button>
@@ -231,7 +231,7 @@
 
             <div class="field">
               <label class="label" for="memoryTitle">Başlık</label>
-              <input type="text" id="memoryTitle" maxlength="60" placeholder="Kısa başlık (opsiyonel)" />
+              <input type="text" id="memoryTitle" maxlength="60" placeholder="Kısa başlık (opsiyonel) (buraya yaz)" />
               <div class="row tiny muted" style="justify-content:space-between;">
                 <span>İpucu: 3–6 kelime yeter.</span>
                 <span id="memoryTitleCount">0/60</span>
@@ -240,7 +240,7 @@
 
             <div class="field">
               <label class="label" for="memoryText">Açıklama</label>
-              <textarea id="memoryText" maxlength="1200" placeholder="Anı açıklaması"></textarea>
+              <textarea id="memoryText" maxlength="1200" placeholder="Anı açıklaması (buraya yaz)"></textarea>
               <div class="row tiny muted" style="justify-content:space-between;">
                 <span>Markdown destek: **kalın**, *italik*, `kod`.</span>
                 <span id="memoryTextCount">0/1200</span>
@@ -255,13 +255,13 @@
 
               <div class="field" style="margin:0;">
                 <label class="label" for="memoryAlbum">Albüm</label>
-                <input type="text" id="memoryAlbum" maxlength="40" placeholder="Örn: Yaz Tatili 2025 (opsiyonel)" />
+                <input type="text" id="memoryAlbum" maxlength="40" placeholder="Örn: Yaz Tatili 2025 (opsiyonel) (buraya yaz)" />
               </div>
             </div>
 
             <div class="field">
               <label class="label" for="memoryTags">Etiketler</label>
-              <input type="text" id="memoryTags" placeholder="Örn: tatil, hediye, okul" />
+              <input type="text" id="memoryTags" placeholder="Örn: tatil, hediye, okul (buraya yaz)" />
               <div id="memoryTagsPreview" class="chips mt10" aria-label="Etiket önizleme" hidden></div>
             </div>
 
@@ -277,7 +277,7 @@
               <button class="ghost mini" id="memoryClearFiltersBtn" type="button">Filtreleri Sıfırla</button>
             </div>
 
-            <input type="text" id="memorySearch" placeholder="Başlık/açıklama/etiket/album içinde ara..." />
+            <input type="text" id="memorySearch" placeholder="Başlık/açıklama/etiket/album içinde ara... (buraya yaz)" />
 
             <div class="filters mt12">
               <select id="memoryAlbumFilter" class="select" aria-label="Albüm filtresi"></select>
@@ -300,7 +300,7 @@
           <div class="empty-inner">
             <h3>Henüz anı yok</h3>
             <p class="muted">İlk anını ekleyerek başlayabilirsin.</p>
-            <button class="primary" data-jump="memories" type="button">Yeni bir anı bırak</button>
+            <button class="primary" data-jump="memories" type="button">Yeni bir anı bırak · İstediğin zaman düzenleyebilirsin</button>
           </div>
         </div>
 
@@ -313,7 +313,7 @@
         <div class="grid2 mt16">
           <div class="card">
             <h3>Kayıtlar</h3>
-            <input type="text" id="diarySearch" placeholder="Kayıtlarda ara..." />
+            <input type="text" id="diarySearch" placeholder="Kayıtlarda ara... (buraya yaz)" />
             <div class="row mt12" style="justify-content:flex-start;">
               <button class="primary" id="newDiaryBtn" type="button">Yeni Kayıt</button>
               <button class="ghost" id="toggleDiaryPreviewBtn" type="button">Önizleme</button>
@@ -324,9 +324,9 @@
           <div class="card">
             <h3>Düzenleyici</h3>
             <div class="row" style="justify-content:flex-start;">
-              <input type="text" id="diaryTitle" placeholder="Başlık (opsiyonel)" />
+              <input type="text" id="diaryTitle" placeholder="Başlık (opsiyonel) (buraya yaz)" />
             </div>
-            <textarea id="diaryText" placeholder="Bugün ne hissettin?"></textarea>
+            <textarea id="diaryText" placeholder="Bugün ne hissettin? (buraya yaz)"></textarea>
 
             <div id="diaryPreview" class="preview mt12" hidden></div>
 
@@ -352,7 +352,7 @@
         <div class="grid2 mt16">
           <div class="card">
             <h3>Yeni Gün Ekle</h3>
-            <input type="text" id="specialName" placeholder="Örn: Tanışma Günü" />
+            <input type="text" id="specialName" placeholder="Örn: Tanışma Günü (buraya yaz)" />
             <input type="date" id="specialDate" />
 
             <div class="row mt12" style="justify-content:flex-start; flex-wrap:wrap;">
@@ -366,7 +366,7 @@
     <span>Her yıl tekrarla</span>
   </label>
 <div class="row mt12" style="justify-content:flex-start; flex-wrap:wrap;">
-  <input type="text" id="chatSearch" placeholder="Sohbette ara..." />
+  <input type="text" id="chatSearch" placeholder="Sohbette ara... (buraya yaz)" />
   <button class="ghost" id="attachBtn" type="button">Dosya ekle</button>
   <input type="file" id="chatFile" class="sr-only" accept="image/*,audio/*" />
 </div>
@@ -410,7 +410,7 @@
             </select>
 
             <!-- JS'de kullanılıyor ama HTML'de yoktu: EKLENDİ -->
-            <input type="text" id="chatSearch" placeholder="Sohbette ara..." style="max-width:220px;" />
+            <input type="text" id="chatSearch" placeholder="Sohbette ara... (buraya yaz)" style="max-width:220px;" />
 
             <button class="ghost" id="pinLastBtn" type="button">Son mesajı sabitle</button>
             <button class="ghost" id="clearChatBtn" type="button">Temizle</button>
@@ -424,7 +424,7 @@
           <div id="chatBox" class="chatbox mt12" aria-label="Sohbet kutusu"></div>
 
           <div class="chatbar">
-            <textarea id="chatInput" rows="3" placeholder="Mesaj yaz (Enter ile gönder • Shift+Enter = satır)"></textarea>
+            <textarea id="chatInput" rows="3" placeholder="Mesaj yaz (Enter ile gönder • Shift+Enter = satır) (buraya yaz)"></textarea>
             <button class="primary" id="sendChatBtn" type="button">Gönder</button>
           </div>
 
@@ -566,7 +566,7 @@
         <div class="grid2 mt16">
           <div class="card">
             <h3>Notlar</h3>
-            <input type="text" id="futureSearch" placeholder="Notlarda ara..." />
+            <input type="text" id="futureSearch" placeholder="Notlarda ara... (buraya yaz)" />
             <div class="row mt12" style="justify-content:flex-start;">
               <button class="primary" id="newFutureBtn" type="button">Yeni Not</button>
               <button class="ghost" id="toggleFuturePreviewBtn" type="button">Önizleme</button>
@@ -576,8 +576,8 @@
 
           <div class="card">
             <h3>Düzenleyici</h3>
-            <input type="text" id="futureTitle" placeholder="Başlık (opsiyonel)" />
-            <textarea id="futureText" placeholder="Geleceğe not..."></textarea>
+            <input type="text" id="futureTitle" placeholder="Başlık (opsiyonel) (buraya yaz)" />
+            <textarea id="futureText" placeholder="Geleceğe not... (buraya yaz)"></textarea>
 
             <div id="futurePreview" class="preview mt12" hidden></div>
 
@@ -618,7 +618,7 @@
           <div class="card">
             <h3>To‑Do</h3>
             <div class="row gap8">
-              <input id="todoInput" type="text" placeholder="Yeni görev..." maxlength="120" />
+              <input id="todoInput" type="text" placeholder="Yeni görev... (buraya yaz)" maxlength="120" />
               <button id="todoAddBtn" class="primary" type="button">Ekle</button>
             </div>
             <ul id="todoList" class="list mt12" aria-label="To-do list"></ul>
@@ -653,7 +653,7 @@
         <div class="card mt16">
           <h3>Alışkanlık Takibi</h3>
           <div class="row gap8">
-            <input id="habitInput" type="text" placeholder="Alışkanlık adı (örn. su iç)" maxlength="60" />
+            <input id="habitInput" type="text" placeholder="Alışkanlık adı (örn. su iç) (buraya yaz)" maxlength="60" />
             <button id="habitAddBtn" class="primary" type="button">Ekle</button>
           </div>
           <div class="muted mt8">Bugün için işaretle: ✅</div>
@@ -709,16 +709,16 @@
             <h4 style="margin:10px 0 8px;">Şifre Değiştir</h4>
             <div class="field" style="margin:0;">
               <label class="label" for="oldPass">Mevcut şifre</label>
-              <input type="password" id="oldPass" placeholder="Mevcut şifre" autocomplete="current-password"/>
+              <input type="password" id="oldPass" placeholder="Mevcut şifre (buraya yaz)" autocomplete="current-password"/>
             </div>
             <div class="grid2 mt12">
               <div class="field" style="margin:0;">
                 <label class="label" for="newPass">Yeni şifre</label>
-                <input type="password" id="newPass" placeholder="Yeni şifre" autocomplete="new-password"/>
+                <input type="password" id="newPass" placeholder="Yeni şifre (buraya yaz)" autocomplete="new-password"/>
               </div>
               <div class="field" style="margin:0;">
                 <label class="label" for="newPass2">Yeni şifre (tekrar)</label>
-                <input type="password" id="newPass2" placeholder="Tekrar" autocomplete="new-password"/>
+                <input type="password" id="newPass2" placeholder="Tekrar (buraya yaz)" autocomplete="new-password"/>
               </div>
             </div>
             <div class="row mt12" style="justify-content:flex-start; gap:10px;">
@@ -872,12 +872,12 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="field" style="margin:0;">
           <label class="label" for="capsuleTitle">Başlık</label>
-          <input type="text" id="capsuleTitle" maxlength="60" placeholder="Örn: 1 yıl sonra" />
+          <input type="text" id="capsuleTitle" maxlength="60" placeholder="Örn: 1 yıl sonra (buraya yaz)" />
         </div>
       </div>
       <div class="field mt12">
         <label class="label" for="capsuleText">Mesaj</label>
-        <textarea id="capsuleText" maxlength="2000" placeholder="Geleceğe mesaj..."></textarea>
+        <textarea id="capsuleText" maxlength="2000" placeholder="Geleceğe mesaj... (buraya yaz)"></textarea>
       </div>
       <div class="row mt12" style="justify-content:flex-start; gap:10px; flex-wrap:wrap;">
         <button class="primary" id="capsuleAddBtn" type="button">Kapsül Oluştur</button>
@@ -945,7 +945,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="field">
         <label>Sohbet Kodu (iki cihaz için)</label>
-        <input id="roomCodeInput" placeholder="örn: 1453" inputmode="numeric" />
+        <input id="roomCodeInput" placeholder="örn: 1453 (buraya yaz)" inputmode="numeric" />
         <div class="hint">Aynı kodu iki cihazda girerseniz sohbet senkron olur. (Realtime için Supabase ayarı gerekir.)</div>
       </div>
       <div class="row end">
@@ -954,5 +954,37 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   </div>
 
-<div class='onboarding-hint'>Bu alan tamamen sana ait. Eklediklerin sadece burada kalır.</div></body>
+<div class='onboarding-hint'>Bu alan tamamen sana ait. Eklediklerin sadece burada kalır.</div>
+<div class="empty-state-hint">
+  Henüz bir şey eklemedin. İlk anı genelde en zorudur.
+</div>
+
+<div class="soft-empty">Burası hâlâ burada.</div>
+<div class="soft-ritual">Bugün sadece bir cümle bile yeter.</div>
+
+<div class="silent-pack focus-area">
+  <div class="timestamp-soft">2026-02-04</div>
+  <div class="undo-hint">Silinenler kısa süreli geri alınabilir.</div>
+  <button class="end-day-btn">Kapatmak serbest.</button>
+</div>
+
+<div class="feature-pack-20">
+  <span class="mood-dot" style="background:#9aa"></span>
+  <div class="soft-search">Sessiz arama hazır.</div>
+  <div class="hint">Buraya dönmek zorunda değilsin.</div>
+  <div class="timestamp-soft">2026-02-04</div>
+</div>
+
+
+<div class="pack-30">
+  <div class="week-divider"></div>
+  <div class="footer-mark">Bu sana ait.</div>
+  <div class="footer-mark">Buraya dönmek zorunda değilsin.</div>
+  <div class="footer-mark">2026-02-04</div>
+</div>
+
+</body>
+
+
+
 </html>
