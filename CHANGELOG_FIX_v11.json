@@ -1,0 +1,19 @@
+{
+  "fixed_zip": "mermi1_GITHUB_PAGES_FULL_REVIEW_FIXED_v11.zip",
+  "files_total": 19,
+  "files_changed_count": 3,
+  "files_changed": [
+    [
+      "html",
+      "404.html"
+    ],
+    [
+      "manifest",
+      "manifest.json"
+    ],
+    [
+      "sw",
+      "sw.js"
+    ]
+  ]
+}

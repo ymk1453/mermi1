@@ -1516,61 +1516,103 @@ body {
   filter: brightness(1.1);
 }
 
-/* === SILENT FEATURE PACK === */
+/* === MODE SYSTEM (ADD-ONLY) === */
+.mode-panel{position:fixed;right:14px;bottom:14px;z-index:9999;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);font-size:12px;opacity:.75}
+.mode-panel:hover{opacity:.95}
+.mode-panel button{margin:4px 4px 0 0;padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);cursor:pointer}
+.mode-panel button.active{background:rgba(255,255,255,.16)}
+.mode-default .pack-30,.mode-default .pack-40,.mode-default .feature-pack-20,.mode-default .silent-pack{opacity:.65}
+.mode-sade .pack-30,.mode-sade .pack-40,.mode-sade .feature-pack-20,.mode-sade .silent-pack,.mode-sade .soft-empty,.mode-sade .soft-ritual,.mode-sade .first-focus-hint,.mode-sade .undo-hint,.mode-sade .fade-dark{display:none!important}
+.mode-odak .focus-area{opacity:1}
+.mode-odak body>*:not(.focus-area):not(.mode-panel){opacity:.12}
+.mode-gizlilik .content,.mode-gizlilik [data-entry]{filter:blur(4px)}
+.mode-gizlilik .mode-panel{background:rgba(0,0,0,.5)}
+.mode-rituel .soft-ritual,.mode-rituel .end-day-btn{opacity:.9}
 
-/* Focus mode */
-.focus-mode body > *:not(.focus-area) {
-  opacity: .15;
+/* === PRODUCT SETTLE PACK (ADD-ONLY) === */
+/* Design tokens */
+:root{
+  --radius:14px;
+  --radius-sm:10px;
+  --pad:12px;
+  --pad-sm:10px;
+  --shadow: 0 10px 30px rgba(0,0,0,.18);
+  --border: 1px solid rgba(255,255,255,.14);
+  --text-dim: rgba(255,255,255,.72);
+  --anim-fast: 120ms;
+  --anim-med: 220ms;
 }
 
-/* Invisible timestamp */
-.timestamp-soft {
-  font-size: 11px;
-  color: rgba(255,255,255,.35);
+/* Consistent controls */
+button, .btn, input, textarea, select{
+  border-radius: var(--radius-sm);
 }
 
-/* Fade close ritual */
-.fade-out {
-  animation: fadeOut .6s ease forwards;
-}
-@keyframes fadeOut {
-  to { opacity: 0; }
+button, .btn{
+  border: var(--border);
+  box-shadow: none;
+  transition: transform var(--anim-fast) ease, opacity var(--anim-fast) ease, filter var(--anim-med) ease;
 }
 
-/* Archive soft */
-.archived {
-  opacity: .4;
+button:hover, .btn:hover{ filter: brightness(1.05); }
+button:active, .btn:active{ transform: scale(.97); }
+
+input, textarea{
+  padding: var(--pad-sm);
+  border: var(--border);
+  outline: none;
 }
 
-/* Undo hint */
-.undo-hint {
-  font-size: 12px;
-  opacity: .5;
+textarea{ line-height: 1.55; }
+
+/* Core actions emphasis (visual only) */
+button.primary, .btn.primary{
+  box-shadow: var(--shadow);
 }
 
-/* === 20 FEATURE PACK (ADD-ONLY) === */
-.read-soft { opacity:.92 }
-.one-line textarea { height:2.2em }
-.soft-search { opacity:.85 }
-.density-long { line-height:1.7 }
-.night-soft { filter: contrast(.95) }
-.hidden-lock { filter: blur(2px) }
-.mood-dot { width:6px;height:6px;border-radius:50%;display:inline-block }
-.menu-soft-hide { opacity:.4 }
-.silent-refresh { transition: opacity .2s }
-.mini-pause { pointer-events:none }
+/* Default mode: keep only strongest 12 features visible */
+.mode-default .pack-30,
+.mode-default .pack-40,
+.mode-default .feature-pack-20,
+.mode-default .silent-pack,
+.mode-default .pack-40,
+.mode-default .pack-30,
+.mode-default .pack-40{
+  display:none !important;
+}
 
-/* === +30 FEATURE PACK (21–50) ADD-ONLY === */
-.breath-delay { transition: opacity .3s }
-.pause-soft { animation: pauseSoft .12s linear }
-@keyframes pauseSoft { from{opacity:.98} to{opacity:1} }
-.defer-today { opacity:.35 }
-.weight-calm { font-weight: 380 }
-.week-divider { height:1px; opacity:.15; margin:16px 0 }
-.old-soft { opacity:.88 }
-.footer-mark { font-size:12px; opacity:.6 }
-.blur-idle { filter: blur(2px) }
-.bg-breathe { animation: bgBreathe 18s ease-in-out infinite }
-@keyframes bgBreathe { 0%{opacity:1} 50%{opacity:.98} 100%{opacity:1} }
-.ui-retreat { opacity:.7 }
-.scroll-calm { scroll-behavior:smooth }
+/* Keep minimal calm hints */
+.mode-default .soft-empty,
+.mode-default .soft-ritual,
+.mode-default .first-focus-hint,
+.mode-default .mode-panel,
+.mode-default .fade-dark{
+  display:block;
+}
+
+/* Reduce visual noise globally */
+.undo-hint, .timestamp-soft, .footer-mark, .pack-40, .pack-30, .feature-pack-20, .silent-pack{ opacity:.6; }
+
+/* Onboarding overlay */
+.onboard-overlay{
+  position:fixed; inset:0; z-index:10000;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+  display:none;
+}
+.onboard-card{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(520px, calc(100% - 28px));
+  border-radius: var(--radius);
+  border: var(--border);
+  padding: 16px 16px 12px 16px;
+  box-shadow: var(--shadow);
+  background: rgba(0,0,0,.35);
+}
+.onboard-title{ font-size: 16px; margin: 0 0 8px 0; }
+.onboard-text{ margin:0 0 12px 0; color: var(--text-dim); line-height:1.5; }
+.onboard-actions{ display:flex; gap:8px; justify-content:flex-end; }
+.onboard-actions button{ padding: 8px 12px; }
+.onboard-dots{ display:flex; gap:6px; margin: 10px 0 0 0; opacity:.7; }
+.onboard-dot{ width:6px; height:6px; border-radius:50%; border:1px solid rgba(255,255,255,.35); }
+.onboard-dot.on{ background: rgba(255,255,255,.55); }

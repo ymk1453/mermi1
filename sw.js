@@ -120,92 +120,94 @@ self.addEventListener("fetch", (event) => {
   }
 })();
 
-// === SILENT FEATURE PACK ===
+// === MODE SYSTEM (ADD-ONLY) ===
 (() => {
-  const endBtn = document.querySelector('.end-day-btn');
-  if (endBtn) {
-    endBtn.addEventListener('click', () => {
-      document.body.classList.add('fade-out');
+  const MODES=['default','sade','odak','gizlilik','rituel'];
+  const key='site_mode_v1';
+  const apply=(m)=>{
+    MODES.forEach(x=>document.documentElement.classList.remove('mode-'+x));
+    document.documentElement.classList.add('mode-'+m);
+    localStorage.setItem(key,m);
+    document.querySelectorAll('.mode-panel button[data-mode]').forEach(b=>{
+      b.classList.toggle('active',b.getAttribute('data-mode')===m);
+    });
+  };
+  apply(localStorage.getItem(key)||'default');
+  const panel=document.querySelector('.mode-panel');
+  if(panel){
+    panel.addEventListener('click',(e)=>{
+      const b=e.target.closest('button[data-mode]');
+      if(b) apply(b.getAttribute('data-mode'));
     });
   }
-
-  // auto draft
-  document.querySelectorAll('textarea').forEach(t => {
-    const key = 'draft_'+location.pathname;
-    t.value = localStorage.getItem(key) || t.value;
-    t.addEventListener('input', () => {
-      localStorage.setItem(key, t.value);
-    });
-  });
 })();
 
-// === 20 FEATURE PACK (ADD-ONLY) ===
+// === ONBOARDING (RUN ONCE) ADD-ONLY ===
 (() => {
-  // soft read mark
-  document.querySelectorAll('[data-entry]').forEach(e=>{
-    if(localStorage.getItem('read_'+e.id)) e.classList.add('read-soft');
-    e.addEventListener('click',()=>localStorage.setItem('read_'+e.id,'1'));
-  });
+  const key = 'onboard_done_v1';
+  const overlay = document.getElementById('onboardOverlay');
+  if (!overlay) return;
 
-  // one-line mode toggle (optional)
-  document.querySelectorAll('[data-one-line]').forEach(b=>{
-    b.addEventListener('click',()=>document.body.classList.toggle('one-line'));
-  });
+  const steps = [
+    {t:'Burası özel.', d:'Burası sadece senin için. Acelemiz yok.'},
+    {t:'Paylaşılmaz.', d:'Buradakiler dışarı çıkmaz. Gösteriş yok, puan yok.'},
+    {t:'Yazıp çıkabilirsin.', d:'Bir cümle bile yeter. İstediğin zaman sadece kapat.'},
+  ];
 
-  // silent recall
-  if(Math.random()<0.05){
-    const r=document.querySelector('[data-entry]');
-    if(r) r.scrollIntoView({behavior:'smooth'});
-  }
+  let i = 0;
+  const title = document.getElementById('onboardTitle');
+  const text = document.getElementById('onboardText');
+  const next = document.getElementById('onboardNext');
+  const skip = document.getElementById('onboardSkip');
 
-  // mini pause after save
-  document.addEventListener('saved',()=>{
-    document.body.classList.add('mini-pause');
-    setTimeout(()=>document.body.classList.remove('mini-pause'),1200);
-  });
-
-  // silent refresh
-  window.addEventListener('beforeunload',()=>document.body.classList.add('silent-refresh'));
-})();
-
-// === +30 FEATURE PACK (21–50) ADD-ONLY ===
-(() => {
-  // breath before write
-  document.querySelectorAll('textarea').forEach(t=>{
-    t.classList.add('breath-delay');
-  });
-
-  // punctuation micro pause
-  document.addEventListener('input',e=>{
-    if(e.target.tagName==='TEXTAREA' && /[\.\!\?]$/.test(e.target.value)){
-      e.target.classList.add('pause-soft');
-      setTimeout(()=>e.target.classList.remove('pause-soft'),120);
+  const render = () => {
+    title.textContent = steps[i].t;
+    text.textContent = steps[i].d;
+    for (let k=0;k<3;k++){
+      const dot = document.getElementById('dot'+k);
+      if (dot) dot.classList.toggle('on', k===i);
     }
-  });
+    if (next) next.textContent = (i===2) ? 'Bitti' : 'Devam';
+  };
 
-  // defer today flag
-  document.querySelectorAll('[data-defer]').forEach(b=>{
-    b.addEventListener('click',()=>b.closest('[data-entry]')?.classList.add('defer-today'));
-  });
+  const close = () => {
+    overlay.style.display = 'none';
+    localStorage.setItem(key, '1');
+  };
 
-  // idle blur
-  let idle;
-  const idleOn=()=>document.body.classList.add('blur-idle');
-  const idleOff=()=>document.body.classList.remove('blur-idle');
-  ['mousemove','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{
-    clearTimeout(idle); idleOff(); idle=setTimeout(idleOn,30000);
-  }));
-
-  // slow scroll for dense content
-  if(document.body.textContent.length>4000){
-    document.documentElement.classList.add('scroll-calm');
+  if (!localStorage.getItem(key)) {
+    overlay.style.display = 'block';
+    render();
   }
 
-  // rare reassurance
-  if(Math.random()<0.03){
-    const m=document.createElement('div');
-    m.textContent='Buradakiler cihazında.';
-    m.className='footer-mark';
-    document.body.appendChild(m);
-  }
+  next?.addEventListener('click', () => {
+    if (i < 2) { i++; render(); }
+    else close();
+  });
+
+  skip?.addEventListener('click', close);
+  overlay?.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
 })();
+
+const CACHE_NAME = 'mermi1-cache-v11';
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE_NAME));
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.map(k => (k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve())))
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  event.respondWith(
+    caches.match(req).then((cached) => cached || fetch(req).then((resp) => {
+      const copy = resp.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(req, copy)).catch(()=>{});
+      return resp;
+    }).catch(() => cached))
+  );
+});

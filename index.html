@@ -954,33 +954,48 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   </div>
 
-<div class='onboarding-hint'>Bu alan tamamen sana ait. Eklediklerin sadece burada kalır.</div>
-<div class="empty-state-hint">
-  Henüz bir şey eklemedin. İlk anı genelde en zorudur.
-</div>
-
 <div class="soft-empty">Burası hâlâ burada.</div>
 <div class="soft-ritual">Bugün sadece bir cümle bile yeter.</div>
 
-<div class="silent-pack focus-area">
-  <div class="timestamp-soft">2026-02-04</div>
-  <div class="undo-hint">Silinenler kısa süreli geri alınabilir.</div>
+<div class="undo-hint">Silinenler kısa süreli geri alınabilir.</div>
   <button class="end-day-btn">Kapatmak serbest.</button>
 </div>
 
-<div class="feature-pack-20">
-  <span class="mood-dot" style="background:#9aa"></span>
-  <div class="soft-search">Sessiz arama hazır.</div>
-  <div class="hint">Buraya dönmek zorunda değilsin.</div>
+<div class="hint">Buraya dönmek zorunda değilsin.</div>
   <div class="timestamp-soft">2026-02-04</div>
 </div>
 
 
-<div class="pack-30">
-  <div class="week-divider"></div>
-  <div class="footer-mark">Bu sana ait.</div>
+<div class="footer-mark">Bu sana ait.</div>
   <div class="footer-mark">Buraya dönmek zorunda değilsin.</div>
   <div class="footer-mark">2026-02-04</div>
+</div>
+
+
+<div class="mode-panel" aria-label="Modlar">
+  <div style="opacity:.7;margin-bottom:6px;">Mod</div>
+  <button type="button" data-mode="default">Normal</button>
+  <button type="button" data-mode="sade">Sade</button>
+  <button type="button" data-mode="odak">Odak</button>
+  <button type="button" data-mode="gizlilik">Gizlilik</button>
+  <button type="button" data-mode="rituel">Ritüel</button>
+</div>
+
+
+<div class="onboard-overlay" id="onboardOverlay" aria-label="Başlangıç">
+  <div class="onboard-card">
+    <h3 class="onboard-title" id="onboardTitle">Burası özel.</h3>
+    <p class="onboard-text" id="onboardText">Burası sadece senin için. Acelemiz yok.</p>
+    <div class="onboard-actions">
+      <button type="button" id="onboardSkip">Geç</button>
+      <button type="button" id="onboardNext" class="primary">Devam</button>
+    </div>
+    <div class="onboard-dots" aria-hidden="true">
+      <span class="onboard-dot on" id="dot0"></span>
+      <span class="onboard-dot" id="dot1"></span>
+      <span class="onboard-dot" id="dot2"></span>
+    </div>
+  </div>
 </div>
 
 </body>
