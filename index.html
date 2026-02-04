@@ -131,7 +131,7 @@
       <section id="home" class="page active">
         <h2>Hoş Geldin</h2>
         <p class="muted">
-          Bu site sadece bizim hikâyemiz için var. Burada anılar birikir, kelimeler saklanır ve geleceğe notlar bırakılır.
+          Burası sadece bizim için. Anılar burada birikir; kelimeler saklanır, geleceğe küçük notlar düşeriz.
         </p>
 
         <div class="grid2 mt16">
@@ -218,10 +218,11 @@
             </div>
 
             <div class="field">
-              <label class="label" for="memoryImage">Görsel</label>
-              <input type="file" id="memoryImage" accept="image/*" />
+              <label class="label" for="memoryImage">Görseller (çoklu seçebilirsin)</label>
+              <input type="file" id="memoryImage" accept="image/*" multiple />
               <div id="memoryImagePreview" class="img-preview" hidden>
                 <img id="memoryImagePreviewImg" alt="Seçilen görsel önizleme" />
+                <div id="memoryImagePreviewHint" class="tiny muted mt8"></div>
                 <button class="ghost mini" id="memoryImageClearBtn" type="button">Kaldır</button>
               </div>
             </div>
@@ -460,6 +461,12 @@
               <label class="checkbox" style="margin:0;">
                 <input type="checkbox" id="soundToggle" />
                 <span>Ses</span>
+              </label>
+              <label class="checkbox" style="margin:0;">
+                <input type="checkbox" id="musicToggle" />
+                <span>Müzik</span>
+              </label>
+              <label class="checkbox" style="margin:0;">
               </label>
               <select id="difficulty" class="select" aria-label="Zorluk">
                 <option value="normal">Normal</option>

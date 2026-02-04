@@ -550,6 +550,15 @@ function relativeLuminance(r,g,b){
   return 0.2126*R + 0.7152*G + 0.0722*B;
 }
 
+function contrastRatio(rgb1, rgb2){
+  // WCAG contrast ratio between two RGB colors (0..255)
+  const L1 = relativeLuminance(rgb1.r, rgb1.g, rgb1.b);
+  const L2 = relativeLuminance(rgb2.r, rgb2.g, rgb2.b);
+  const light = Math.max(L1, L2);
+  const dark  = Math.min(L1, L2);
+  return (light + 0.05) / (dark + 0.05);
+}
+
 function applyTheme(theme){
   const t = (theme || "pink").toLowerCase();
 
@@ -563,17 +572,30 @@ function applyTheme(theme){
   const primary = (getComputedStyle(document.body).getPropertyValue("--primary1").trim() || "#ff5f7e");
   if (meta) meta.setAttribute("content", primary);
 
-  // Seçilen temaya göre yazı rengini otomatik ayarla (göz yakmasın)
+  // Seçilen temaya göre yazı rengini otomatik ayarla (WCAG'e yakın kontrast)
   const bg = (getComputedStyle(document.body).getPropertyValue("--bg1").trim() || primary);
   const rgb = hexToRgb(bg) || hexToRgb(primary) || {r:255,g:95,b:126};
-  const lum = relativeLuminance(rgb.r, rgb.g, rgb.b); // 0..1
-  const textColor = lum > 0.62 ? "#111111" : "#ffffff";
-  const muted = lum > 0.62 ? "rgba(0,0,0,0.78)" : "rgba(255,255,255,0.85)";
 
+  const white = {r:255,g:255,b:255};
+  const black = {r:17,g:17,b:17};
+
+  const crWhite = contrastRatio(rgb, white);
+  const crBlack = contrastRatio(rgb, black);
+
+  // Daha yüksek kontrastı seç
+  const useBlack = crBlack >= crWhite;
+  const textColor = useBlack ? "#111111" : "#ffffff";
+
+  // Muted, metnin tonu: seçilen ana metne göre
+  const muted = useBlack ? "rgba(0,0,0,0.78)" : "rgba(255,255,255,0.85)";
+
+  // Eğer iki seçenek de düşükse, arka plan stroke/overlay'i yumuşat (parlama azalt)
+  const best = Math.max(crWhite, crBlack);
   document.documentElement.style.setProperty("--text", textColor);
   document.documentElement.style.setProperty("--muted", muted);
 
   // Aşırı parlak temalarda kart stroke'u biraz yumuşat
+  const lum = relativeLuminance(rgb.r, rgb.g, rgb.b); // 0..1
   document.documentElement.style.setProperty("--stroke", lum > 0.72 ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.28)");
 
   try { localStorage.setItem(STORAGE_KEYS.theme, t); } catch {}
@@ -728,22 +750,29 @@ function renderMemoryTagsPreview() {
 
 function renderMemoryImagePreview() {
   const fileEl = $("#memoryImage");
-  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
+  const files = fileEl && fileEl.files ? Array.from(fileEl.files) : [];
 
   const box = $("#memoryImagePreview");
   const img = $("#memoryImagePreviewImg");
   if (!box || !img) return;
 
-  if (!file) {
+  if (!files.length) {
     box.hidden = true;
     img.removeAttribute("src");
     return;
   }
 
+  // İlk görseli göster, çokluysa küçük bilgi yaz
+  const file = files[0];
   const r = new FileReader();
   r.onload = () => {
     img.src = String(r.result || "");
     box.hidden = false;
+
+    const hint = document.getElementById("memoryImagePreviewHint");
+    if (hint) {
+      hint.textContent = files.length > 1 ? `+${files.length - 1} foto daha seçildi` : "";
+    }
   };
   r.readAsDataURL(file);
 }
@@ -807,17 +836,56 @@ function memoryCard(m) {
   const div = document.createElement("div");
   div.className = "card memory";
 
-  const img = document.createElement("img");
-  img.alt = m.title || "Anı görseli";
+  const imgWrap = document.createElement("div");
+  imgWrap.className = "imgwrap";
 
-  // Resim artık base64 değil: imageId varsa IndexedDB'den hydrate edilir.
-  if (m.imageId) {
+  const mainImg = document.createElement("img");
+  mainImg.alt = m.title || "Anı görseli";
+  mainImg.setAttribute("data-imgrole", "main");
+  mainImg.loading = "lazy";
+
+  const placeholder = "icons/icon-192.png";
+
+  // Çoklu görsel desteği: m.imageIds[] (IndexedDB)
+  const ids = Array.isArray(m.imageIds) ? m.imageIds.filter(Boolean) : [];
+  if (ids.length) {
+    div.setAttribute("data-mem-imgids", JSON.stringify(ids));
+    mainImg.src = placeholder;
+
+    const thumbs = document.createElement("div");
+    thumbs.className = "thumbs";
+    ids.slice(0, 8).forEach((id, i) => {
+      const t = document.createElement("img");
+      t.alt = "Anı görseli " + (i + 1);
+      t.src = placeholder;
+      t.setAttribute("data-imgid", id);
+      if (i === 0) t.classList.add("active");
+      t.addEventListener("click", async () => {
+        thumbs.querySelectorAll("img").forEach(x => x.classList.remove("active"));
+        t.classList.add("active");
+        try{
+          const rec = await mmDB.getMedia(id);
+          if(rec && rec.blob){
+            mainImg.src = URL.createObjectURL(rec.blob);
+          }
+        }catch(e){ console.error(e); }
+      });
+      thumbs.appendChild(t);
+    });
+
+    imgWrap.appendChild(mainImg);
+    imgWrap.appendChild(thumbs);
+  } else if (m.imageId) {
+    // tek görsel (geriye uyumluluk)
     div.setAttribute("data-mem-imgid", m.imageId);
-    img.src = "icons/picture-placeholder.svg";
+    mainImg.src = placeholder;
+    imgWrap.appendChild(mainImg);
   } else if (m.image) {
-    img.src = m.image;
+    mainImg.src = m.image;
+    imgWrap.appendChild(mainImg);
   } else {
-    img.src = "icons/picture-placeholder.svg";
+    mainImg.src = placeholder;
+    imgWrap.appendChild(mainImg);
   }
 
   const meta = document.createElement("div");
@@ -843,65 +911,40 @@ function memoryCard(m) {
     chip.textContent = tg;
     chip.addEventListener("click", () => {
       memoryFilter.tags.add(tg);
-      renderMemoryFilters();
+      renderMemoryTagFilter();
       renderMemories();
     });
     tagsRow.appendChild(chip);
   });
 
   const info = document.createElement("div");
-  info.className = "info";
-  const dt = m.date ? new Date(m.date).toLocaleDateString("tr-TR") : "";
-  info.textContent = [dt, (m.album || "")].filter(Boolean).join(" • ");
+  info.className = "tiny muted";
+  const dateStr = m.date ? `📅 ${m.date}` : "";
+  const albumStr = m.album ? ` • 📚 ${m.album}` : "";
+  const imgStr = ids.length ? ` • 🖼️ ${ids.length} foto` : (m.imageId ? " • 🖼️ 1 foto" : "");
+  info.textContent = (dateStr + albumStr + imgStr).trim() || "—";
 
   left.appendChild(t);
-  if (d.textContent) left.appendChild(d);
-  if (info.textContent) left.appendChild(info);
+  if (m.text) left.appendChild(d);
+  left.appendChild(info);
   if ((m.tags || []).length) left.appendChild(tagsRow);
 
-  const right = document.createElement("div");
-  right.className = "actions";
-  const del = document.createElement("button");
-  del.className = "btn ghost";
-  del.textContent = "Sil";
-  del.addEventListener("click", () => deleteMemory(m.id));
-  right.appendChild(del);
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  actions.innerHTML = `
+    <button class="ghost" type="button">Düzenle</button>
+    <button class="ghost danger" type="button">Sil</button>
+  `;
+  actions.children[0].addEventListener("click", () => editMemory(m.id));
+  actions.children[1].addEventListener("click", () => deleteMemory(m.id));
 
   meta.appendChild(left);
-  meta.appendChild(right);
+  meta.appendChild(actions);
 
-  div.appendChild(img);
+  div.appendChild(imgWrap);
   div.appendChild(meta);
 
   return div;
-}
-
-async function deleteMemory(id){
-  const list = loadMemories();
-  const idx = list.findIndex(x=>x.id===id);
-  if(idx===-1) return;
-  const m = list[idx];
-  if(!confirm("Bu anıyı silmek istiyor musun?")) return;
-
-  // bağlı görsel varsa IndexedDB'den de sil
-  if(m && m.imageId){
-    try{ await mmDB.delMedia(m.imageId); }catch(e){}
-  }
-
-  list.splice(idx,1);
-  saveMemories(list);
-  renderMemories();
-  toast("Anı silindi.");
-}
-
-
-function getAllMemoryAlbums(list) {
-  const a = [];
-  list.forEach((m) => {
-    const alb = (m.album || "").trim();
-    if (alb) a.push(alb);
-  });
-  return unique(a).sort((x, y) => x.localeCompare(y, "tr"));
 }
 
 function renderMemoryAlbumFilter() {
@@ -992,46 +1035,75 @@ function renderMemories() {
   hydrateMemoryImages();
 }
 async function hydrateMemoryImages(){
-  const wrap = $("#memoriesGrid");
+  const wrap = $("#memoryList");
   if(!wrap) return;
-  const nodes = wrap.querySelectorAll("[data-mem-imgid]");
-  for(const el of nodes){
+
+  // Tek görsel: data-mem-imgid, Çoklu: data-mem-imgids (json array)
+  const singles = wrap.querySelectorAll("[data-mem-imgid]");
+  for(const el of singles){
     const id = el.getAttribute("data-mem-imgid");
     if(!id) continue;
     try{
       const rec = await mmDB.getMedia(id);
       if(!rec || !rec.blob) continue;
       const url = URL.createObjectURL(rec.blob);
-      const img = el.querySelector("img");
+      const img = el.querySelector("img[data-imgrole='main']");
       if(img) img.src = url;
-      // objectURL'leri sayfa yaşam döngüsünde tutalım; gerekirse sonra revoke ederiz.
-    }catch(e){
-      console.error(e);
+    }catch(e){ console.error(e); }
+  }
+
+  const multis = wrap.querySelectorAll("[data-mem-imgids]");
+  for(const el of multis){
+    const raw = el.getAttribute("data-mem-imgids");
+    if(!raw) continue;
+    let ids = [];
+    try{ ids = JSON.parse(raw) || []; }catch{ ids = []; }
+    if(!ids.length) continue;
+
+    // main
+    try{
+      const rec0 = await mmDB.getMedia(ids[0]);
+      if(rec0 && rec0.blob){
+        const url0 = URL.createObjectURL(rec0.blob);
+        const main = el.querySelector("img[data-imgrole='main']");
+        if(main) main.src = url0;
+      }
+    }catch(e){ console.error(e); }
+
+    // thumbs
+    const thumbs = el.querySelectorAll("img[data-imgid]");
+    for(const im of thumbs){
+      const id = im.getAttribute("data-imgid");
+      if(!id) continue;
+      try{
+        const rec = await mmDB.getMedia(id);
+        if(!rec || !rec.blob) continue;
+        const url = URL.createObjectURL(rec.blob);
+        im.src = url;
+      }catch(e){ console.error(e); }
     }
   }
 }
 
-
 function addMemory() {
   const fileEl = $("#memoryImage");
-  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
-
+  const files = fileEl && fileEl.files ? Array.from(fileEl.files) : [];
   const title = (($("#memoryTitle")?.value || "").trim());
   const textVal = (($("#memoryText")?.value || "").trim());
   const date = $("#memoryDate")?.value || "";
   const tags = parseTags($("#memoryTags")?.value || "");
   const album = parseAlbum($("#memoryAlbum")?.value || "");
 
-  if (!title && !textVal && !file) {
+  if (!title && !textVal && !files.length) {
     toast("En az bir şey yaz (başlık/metin) veya görsel ekle.");
     return;
   }
 
   const m = {
     id: safeUUID(),
-    // image artık localStorage'a base64 basmayacak; kotayı patlatıyordu.
     image: null,
-    imageId: null,
+    imageId: null,         // geriye uyumluluk
+    imageIds: [],          // yeni: çoklu görsel
     title,
     text: textVal,
     date: date || null,
@@ -1040,35 +1112,50 @@ function addMemory() {
     createdAt: Date.now()
   };
 
-  const commit = async () => {
-    const list = loadMemories();
-    list.push(m);
-    saveMemories(list);
-
+  const resetForm = () => {
     if (fileEl) fileEl.value = "";
     if ($("#memoryTitle")) $("#memoryTitle").value = "";
     if ($("#memoryText")) $("#memoryText").value = "";
     if ($("#memoryDate")) $("#memoryDate").value = "";
     if ($("#memoryTags")) $("#memoryTags").value = "";
     if ($("#memoryAlbum")) $("#memoryAlbum").value = "";
+    const pv = $("#memoryImagePreview");
+    if (pv) pv.hidden = true;
+    const pvImg = $("#memoryImagePreviewImg");
+    if (pvImg) pvImg.src = "";
+  };
 
+  const commit = async () => {
+    const list = loadMemories();
+    list.push(m);
+    saveMemories(list);
+    resetForm();
     renderMemories();
     toast("Anı eklendi ✅");
   };
 
-  if (!file) {
+  if (!files.length) {
     commit();
     return;
   }
 
-  // Dosyayı IndexedDB'ye Blob olarak kaydet
-  const mediaId = "mem_" + m.id;
-  mmDB.putMedia(mediaId, file, { kind:"memory-image", type:file.type, name:file.name })
-    .then(() => { m.imageId = mediaId; commit(); })
-    .catch((err) => {
-      console.error(err);
-      toast("Görsel kaydedilemedi (tarayıcı kotası/izin).");
-    });
+  // Dosyaları IndexedDB'ye Blob olarak kaydet (çoklu)
+  const tasks = files.slice(0, 12).map((file, i) => {
+    const mediaId = "mem_" + m.id + "_" + i;
+    return mmDB.putMedia(mediaId, file, { kind:"memory-image", type:file.type, name:file.name })
+      .then(() => mediaId);
+  });
+
+  Promise.allSettled(tasks).then((results) => {
+    const ok = results.filter(r => r.status === "fulfilled").map(r => r.value);
+    m.imageIds = ok;
+    // tek görsel geriye uyumluluk: ilkini imageId'ye de yaz
+    if (ok[0]) m.imageId = ok[0];
+    if (!ok.length) {
+      toast("Görseller kaydedilemedi (tarayıcı kotası/izin).");
+    }
+    commit();
+  });
 }
 
 function editMemory(id) {
@@ -2074,7 +2161,10 @@ function renderChat() {
 
   list.forEach((m) => {
     const row = document.createElement("div");
-    row.className = `msg ${m.sender || "mevra"}`;
+    const who = (getWho && getWho()) || (localStorage.getItem("mm_who")||"");
+    const sender = (m.sender || "mevra");
+    document.body && document.body.setAttribute("data-who", who || sender);
+    row.className = `msg ${sender} ${(who && sender===who) ? "me" : "other"}`;
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
@@ -2283,20 +2373,60 @@ function beep(freq = 660, ms = 70) {
     const o = ctx.createOscillator();
     const g = ctx.createGain();
 
-    o.type = "sine";
+    // Rahatsız edici "bip" yerine daha yumuşak bir tık
+    o.type = "triangle";
     o.frequency.value = freq;
-    g.gain.value = 0.05;
+
+    const now = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.03, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + Math.max(0.05, ms/1000));
 
     o.connect(g);
     g.connect(ctx.destination);
 
-    o.start();
-    setTimeout(() => {
-      o.stop();
-    }, ms);
-  } catch {
-    // ignore
-  }
+    o.start(now);
+    o.stop(now + Math.max(0.07, ms/1000) + 0.02);
+  } catch {}
+}
+
+// --- Soft background music (toggle) ---
+let __bgm = null;
+
+function startBgMusic(){
+  const on = $("#musicToggle")?.checked ?? (localStorage.getItem("mm_music") === "1");
+  if(!on) return;
+  if(__bgm) return;
+
+  try{
+    const ctx = beep._ctx || (beep._ctx = new (window.AudioContext || window.webkitAudioContext)());
+    const master = ctx.createGain();
+    master.gain.value = 0.015;
+    master.connect(ctx.destination);
+
+    const freqs = [220, 277.18, 329.63]; // A minor-ish pad
+    const oscs = freqs.map(f=>{
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = f;
+      g.gain.value = 0.6;
+      o.connect(g);
+      g.connect(master);
+      o.start();
+      return o;
+    });
+
+    __bgm = { ctx, master, oscs };
+  }catch(e){ console.warn(e); }
+}
+
+function stopBgMusic(){
+  if(!__bgm) return;
+  try{
+    __bgm.oscs.forEach(o=>{ try{o.stop();}catch{} });
+  }catch{}
+  __bgm = null;
 }
 
 function startGame() {
@@ -2319,7 +2449,8 @@ function startGame() {
 
   placeHeartRandom();
   toast("Oyun başladı.");
-  beep(720, 90);
+  startBgMusic();
+  beep(520, 60);
 
   clearInterval(gameTimer);
   gameTimer = setInterval(() => {
@@ -2345,6 +2476,7 @@ function endGame() {
 
   const heart = $("#heartTarget");
   if (heart) heart.hidden = true;
+  stopBgMusic();
 
   const last = loadLastScores();
   last.unshift({ score, combo, miss, ts: Date.now() });
@@ -2361,10 +2493,10 @@ function endGame() {
     saveBest(score);
     setText("#bestScore", String(score));
     toast("Yeni rekor.");
-    beep(880, 120);
+    beep(660, 90);
   } else {
     toast("Oyun bitti.");
-    beep(440, 120);
+    beep(392, 90);
   }
 }
 
@@ -2610,6 +2742,8 @@ function initAfterLogin() {
   // restore toggles
   const soundSaved = localStorage.getItem(STORAGE_KEYS.sound);
   if ($("#soundToggle")) $("#soundToggle").checked = soundSaved === "1";
+  const musicSaved = localStorage.getItem("mm_music");
+  if ($("#musicToggle")) $("#musicToggle").checked = musicSaved === "1";
 
   const diffSaved = localStorage.getItem(STORAGE_KEYS.difficulty) || "normal";
   if ($("#difficulty")) $("#difficulty").value = diffSaved;
@@ -2842,6 +2976,10 @@ function wireEvents() {
 
   on($("#soundToggle"), "change", (e) => {
     localStorage.setItem(STORAGE_KEYS.sound, e.target.checked ? "1" : "0");
+  });
+  on($("#musicToggle"), "change", (e) => {
+    localStorage.setItem("mm_music", e.target.checked ? "1" : "0");
+    if (e.target.checked) startBgMusic(); else stopBgMusic();
   });
   on($("#difficulty"), "change", (e) => {
     localStorage.setItem(STORAGE_KEYS.difficulty, e.target.value);

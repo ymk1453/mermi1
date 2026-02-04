@@ -1486,3 +1486,18 @@ body.fake-on .desc{ filter: blur(6px); }
   background: rgba(255,255,255,0.08);
 }
 #privacyToggleBtn.on{ filter: drop-shadow(0 0 8px rgba(0,0,0,0.15)); }
+
+
+/* --- PATCH: Chat tarafları (kim girdi) --- */
+body[data-who='mevra'] .msg.mevra{justify-content:flex-end;}
+body[data-who='mevra'] .msg.mizra{justify-content:flex-start;}
+body[data-who='mizra'] .msg.mizra{justify-content:flex-end;}
+body[data-who='mizra'] .msg.mevra{justify-content:flex-start;}
+body[data-who='mevra'] .msg.mevra .bubble, body[data-who='mizra'] .msg.mizra .bubble{border-top-right-radius:6px;}
+body[data-who='mevra'] .msg.mizra .bubble, body[data-who='mizra'] .msg.mevra .bubble{border-top-left-radius:6px;}
+
+/* --- PATCH: Çoklu anı görseli --- */
+.memory .imgwrap{display:flex;flex-direction:column;gap:8px}
+.memory .thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.memory .thumbs img{width:44px;height:44px;object-fit:cover;border-radius:10px;border:1px solid var(--stroke);opacity:.9;cursor:pointer}
+.memory .thumbs img.active{outline:2px solid var(--primary2);opacity:1}
