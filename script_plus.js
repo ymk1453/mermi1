@@ -60,6 +60,58 @@ const CHAT_KEYS = {
   device: "mm_device_id"
 };
 
+
+function initWhoModal(){
+  const modal = $("#whoModal");
+  const saveBtn = $("#whoSaveBtn");
+  const roomIn = $("#roomCodeInput");
+  if(!modal || !saveBtn) return;
+
+  const who = getWho();
+  const room = getRoom();
+  if(roomIn) roomIn.value = room || "";
+
+  // ilk girişte kim + oda sor
+  if(!who || !room){
+    modal.hidden = false;
+  }
+
+  // mevcut değerleri UI'ya yansıt
+  const sel = $("#chatSender");
+  if(sel && who) sel.value = who;
+
+  // click handler tek kez bağlansın
+  if(saveBtn.dataset.bound==="1") return;
+  saveBtn.dataset.bound="1";
+
+  saveBtn.addEventListener("click", async ()=>{
+    const picked = document.querySelector('input[name="whoPick"]:checked')?.value || "";
+    const code = (roomIn?.value || "").trim();
+    if(!picked){
+      toast("Önce kim girdi seç.");
+      return;
+    }
+    if(!code){
+      toast("Oda kodu yaz (aynı kodu iki cihazda da gir).");
+      return;
+    }
+    setWho(picked);
+    setRoom(code);
+
+    const sel2 = $("#chatSender");
+    if(sel2) sel2.value = picked;
+
+    modal.hidden = true;
+
+    try{
+      await connectRealtimeChat();
+      toast("Sohbet hazır ✅");
+    }catch(e){
+      console.warn(e);
+      toast("Bağlantı kurulamadı (offline olabilir).");
+    }
+  });
+}
 function getDeviceId(){
   let id = localStorage.getItem(CHAT_KEYS.device);
   if(!id){
@@ -108,44 +160,6 @@ async function connectRealtimeChat(){
     list.push(msg);
     saveChat(list);
     renderChat();
-    // kim girdi + oda kodu
-    (function(){
-      const modal = $("#whoModal");
-      const saveBtn = $("#whoSaveBtn");
-      const roomIn = $("#roomCodeInput");
-      if(!modal || !saveBtn) return;
-
-      const who = getWho();
-      const room = getRoom();
-      if(roomIn) roomIn.value = room || "";
-
-      if(!who){
-        modal.hidden = false;
-      }
-      saveBtn.addEventListener("click", async ()=>{
-        const picked = document.querySelector('input[name="whoPick"]:checked')?.value || "";
-        const code = (roomIn?.value || "").trim();
-        if(!picked){
-          toast("Önce kim girdi seç.");
-          return;
-        }
-        setWho(picked);
-        if(code) setRoom(code);
-        // chat sender select'i buna eşitle
-        const sel = $("#chatSender");
-        if(sel) sel.value = picked;
-        // artık seçimi sakla ve modalı kapat
-        modal.hidden = true;
-        await connectRealtimeChat();
-        toast("Hazır ✅");
-      });
-
-      // eğer who zaten kayıtlıysa select'i senkronla ve realtime bağlan
-      const sel = $("#chatSender");
-      if(sel && who) sel.value = who;
-      if(who && room){ connectRealtimeChat(); }
-    })();
-
   });
 
   await chatChannel.subscribe();
@@ -573,6 +587,11 @@ function applyTheme(theme){
   document.documentElement.style.setProperty("--text", textColor);
   document.documentElement.style.setProperty("--muted", muted);
 
+  // Select & field text de kontrasta göre ayarlansın
+  document.documentElement.style.setProperty("--select-text", textColor);
+  document.documentElement.style.setProperty("--field-text", textColor);
+  document.documentElement.style.setProperty("--field-placeholder", lum > 0.62 ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.65)");
+
   // Aşırı parlak temalarda kart stroke'u biraz yumuşat
   document.documentElement.style.setProperty("--stroke", lum > 0.72 ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.28)");
 
@@ -984,7 +1003,7 @@ function renderMemories() {
   hydrateMemoryImages();
 }
 async function hydrateMemoryImages(){
-  const wrap = $("#memoriesGrid");
+  const wrap = $("#memoryList");
   if(!wrap) return;
   const nodes = wrap.querySelectorAll("[data-mem-imgid]");
   for(const el of nodes){
@@ -2066,17 +2085,20 @@ function renderChat() {
 
   list.forEach((m) => {
     const row = document.createElement("div");
-    row.className = `msg ${m.sender || "mevra"}`;
+    // taraf belirleme: gerçek çoklu cihaz için deviceId esas alınır
+    const myDev = getDeviceId ? getDeviceId() : "";
+    const isMine = (m.deviceId && myDev && m.deviceId === myDev) || (!m.deviceId && (m.sender === (getWho?getWho():"") || m.sender==="mevra"));
+    row.className = `msg ${isMine ? "mevra" : "mizra"}`;
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
 
     const who = document.createElement("div");
     who.className = "who";
-    who.textContent = m.sender === "mizra" ? "Mizra" : "Mevra";
-    if(m.deviceId){ who.textContent += ` · ${m.deviceId.slice(0,6)}`; }
-
-    const content = document.createElement("div");
+    const label = (m.who || m.sender || "").trim();
+    who.textContent = label ? label[0].toUpperCase()+label.slice(1) : (isMine ? "Ben" : "Diğer");
+    if(m.deviceId){ who.textContent += ` · ${String(m.deviceId).slice(0,6)}`; }
+const content = document.createElement("div");
 
     if (m.type === "image" && m.data) {
       const im = document.createElement("img");
@@ -2160,17 +2182,51 @@ function renderChat() {
 
 function sendMessage() {
   const input = $("#chatInput");
-  const sender = $("#chatSender")?.value || "mevra";
   const text = (input ? input.value : "").trim();
   if (!text) return;
 
+  // Kim girdi + cihaz id
+  const who = (getWho ? getWho() : "") || ($("#chatSender")?.value || "").trim() || "mevra";
+  const deviceId = (getDeviceId ? getDeviceId() : "") || ("dev_" + safeUUID());
+
+  const msg = {
+    id: safeUUID(),
+    who,
+    sender: who, // geriye dönük uyum
+    deviceId,
+    type: "text",
+    text,
+    ts: Date.now(),
+    likes: 0,
+    reacts: {}
+  };
+
+  // local store
   const list = loadChat();
-  list.push({ id: safeUUID(), sender, text, ts: Date.now(), likes: 0, reacts: {} });
+  list.push(msg);
   saveChat(list);
+
+  // realtime (Supabase) varsa broadcast
+  (async ()=>{
+    try{
+      await ensureSupabase?.();
+      const room = getRoom ? getRoom() : "";
+      if(room && !chatChannel){
+        await connectRealtimeChat();
+      }
+      if(chatChannel){
+        await chatChannel.send({ type: "broadcast", event: "new_msg", payload: msg });
+      }
+    }catch(e){
+      // sessiz geç (offline/izin yok)
+      console.warn("realtime send failed", e);
+    }
+  })();
 
   if (input) input.value = "";
   renderChat();
 }
+
 
 function pinLastMessage() {
   const list = loadChat().slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
@@ -3204,12 +3260,60 @@ function startTurnBasedLoveGame(){
 
 // Sound Love Game
 function startSoundLoveGame(){
-  openGame("🔊 Sesli Romantik Oyun", `
-    <p>Butona basınca romantik ses çıkar.</p>
-    <button class="primary" id="soundBtn">❤️</button>
+  openGame("🎶 Romantik Müzik", `
+    <p>Rahatsız eden ses gitti. Butona basınca yumuşak bir melodi çalar.</p>
+    <div class="row" style="justify-content:flex-start; gap:10px; flex-wrap:wrap;">
+      <button class="primary" id="soundBtn">❤️ Çal</button>
+      <button class="ghost" id="soundMuteBtn">🔈 Ses: Açık</button>
+    </div>
+    <p class="tiny muted mt12">Not: WebAudio kullanır (offline da çalışır).</p>
   `);
-  const audio=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-  document.getElementById("soundBtn").onclick=()=>audio.play();
+
+  let muted = (localStorage.getItem("mm_sound_muted")==="1");
+  const muteBtn = document.getElementById("soundMuteBtn");
+  const sync = ()=>{
+    if(muteBtn) muteBtn.textContent = muted ? "🔇 Ses: Kapalı" : "🔈 Ses: Açık";
+  };
+  sync();
+
+  function playSoftMelody(){
+    if(muted) return;
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const gain = ctx.createGain();
+      gain.gain.value = 0.0001;
+      gain.connect(ctx.destination);
+
+      // yumuşak envelope
+      const now = ctx.currentTime;
+      gain.gain.linearRampToValueAtTime(0.18, now + 0.03);
+      gain.gain.linearRampToValueAtTime(0.10, now + 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+
+      const notes = [261.63, 329.63, 392.00, 523.25]; // C4 E4 G4 C5
+      notes.forEach((f, i)=>{
+        const o = ctx.createOscillator();
+        o.type = "triangle";
+        o.frequency.setValueAtTime(f, now + i*0.05);
+        o.connect(gain);
+        o.start(now + i*0.05);
+        o.stop(now + 1.6);
+      });
+
+      setTimeout(()=>{ try{ ctx.close(); }catch{} }, 1800);
+    }catch(e){}
+  }
+
+  const btn = document.getElementById("soundBtn");
+  if(btn) btn.onclick = playSoftMelody;
+
+  if(muteBtn){
+    muteBtn.onclick = ()=>{
+      muted = !muted;
+      localStorage.setItem("mm_sound_muted", muted ? "1":"0");
+      sync();
+    };
+  }
 }
 
 // Know Me Quiz
@@ -3239,6 +3343,116 @@ function startKnowMeQuiz(){
   }
   render();
 }
+
+
+function startPuzzleGame(){
+  const images = [
+    {label:"Yazılı", src:"home.png"},
+    {label:"Anılar", src:"memories.png"},
+    {label:"İkon", src:"icon-512.png"},
+    {label:"Pembe", src:"icon-192.png"}
+  ];
+  const pick = images[Math.floor(Math.random()*images.length)];
+
+  openGame(`🧩 Puzzle (${pick.label})`, `
+    <p class="tiny muted">Parçaları seçip yer değiştir. Doğru dizince biter.</p>
+    <div class="row mt12" style="justify-content:flex-start; gap:10px; flex-wrap:wrap;">
+      <button class="ghost" id="puzzleShuffleBtn">Karıştır</button>
+      <button class="ghost" id="puzzleNewBtn">Yeni Görsel</button>
+    </div>
+    <canvas id="puzzleCanvas" width="300" height="300" style="width:300px;max-width:92vw;border-radius:16px;border:1px solid var(--stroke);margin-top:12px;background:rgba(255,255,255,0.06)"></canvas>
+    <div id="puzzleOut" class="tiny muted mt12">—</div>
+  `);
+
+  const canvas = document.getElementById("puzzleCanvas");
+  const out = document.getElementById("puzzleOut");
+  if(!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  const N = 3; // 3x3
+  const size = canvas.width;
+  const cell = size / N;
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = pick.src;
+
+  let sel = null;
+  let board = [];
+  function solved(){
+    return board.every((v,i)=>v===i);
+  }
+  function shuffle(){
+    board = Array.from({length:N*N}, (_,i)=>i);
+    // fisher-yates
+    for(let i=board.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [board[i],board[j]]=[board[j],board[i]];
+    }
+    // nadiren çözümlü gelirse tekrar karıştır
+    if(solved()) shuffle();
+    sel=null;
+    draw();
+    if(out) out.textContent = "Karıştırıldı. 2 parçaya tıkla ve yer değiştir.";
+  }
+  function draw(){
+    if(!img.complete) return;
+    ctx.clearRect(0,0,size,size);
+    for(let i=0;i<board.length;i++){
+      const v = board[i];
+      const sx = (v%N)*cell;
+      const sy = Math.floor(v/N)*cell;
+      const dx = (i%N)*cell;
+      const dy = Math.floor(i/N)*cell;
+      ctx.drawImage(img, sx, sy, cell, cell, dx, dy, cell, cell);
+
+      // grid + selection
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.20)";
+      ctx.strokeRect(dx,dy,cell,cell);
+      if(sel===i){
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "rgba(255,95,126,0.95)";
+        ctx.strokeRect(dx+2,dy+2,cell-4,cell-4);
+      }
+    }
+  }
+
+  canvas.addEventListener("click", (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const c = Math.floor(x / (rect.width / N));
+    const r = Math.floor(y / (rect.height / N));
+    const idx = r*N + c;
+    if(idx<0 || idx>=board.length) return;
+
+    if(sel===null){
+      sel = idx; draw();
+      return;
+    }
+    if(sel===idx){
+      sel=null; draw(); return;
+    }
+    // swap
+    [board[sel], board[idx]] = [board[idx], board[sel]];
+    sel=null;
+    draw();
+    if(solved()){
+      if(out) out.innerHTML = "✅ Tamamlandı! <b>Harika</b>";
+      try{ bumpStat("puzzleDone", 1); addXP(30, "puzzle"); checkAchievements(); }catch{}
+    }else{
+      if(out) out.textContent = "Devam…";
+    }
+  });
+
+  document.getElementById("puzzleShuffleBtn")?.addEventListener("click", shuffle);
+  document.getElementById("puzzleNewBtn")?.addEventListener("click", ()=>startPuzzleGame());
+
+  img.onload = ()=>{ shuffle(); };
+  img.onerror = ()=>{ if(out) out.textContent="Görsel yüklenemedi."; };
+}
+
 
 // Achievements
 function showAchievements(){
@@ -3870,6 +4084,7 @@ function initGamesUI(){
   on($("#btnLoveTtt"), "click", startTurnBasedLoveGame);
   on($("#btnLoveSound"), "click", startSoundLoveGame);
   on($("#btnKnowMe"), "click", startKnowMeQuiz);
+  on($("#btnPuzzle"), "click", startPuzzleGame);
 
   on($("#btnAchievements"), "click", showAchievements);
   on($("#btnGameStats"), "click", showGameStats);
@@ -4584,6 +4799,10 @@ function initGamesUI(){
     // apply persisted privacy/fake
     setPrivacy(localStorage.getItem(KEYS.privacy)==="1");
     setFake(localStorage.getItem(KEYS.fake)==="1");
+
+    // realtime chat kim + oda kurulumu
+    try{ initWhoModal(); const who=getWho?.(); const room=getRoom?.(); if(who && room){ connectRealtimeChat(); } }catch(e){}
+
 
     // mood
     const mbtn = $$("#moodSaveBtn");

@@ -1,4 +1,4 @@
-const CACHE = "mm-pwa-v9";
+const CACHE = "mm-pwa-v10";
 
 const ASSETS = [
   "/",
@@ -10,7 +10,12 @@ const ASSETS = [
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
-  "/icons/apple-touch-icon.png"
+  "/icons/apple-touch-icon.png",
+  "/icons/picture-placeholder.svg",
+  "/home.png",
+  "/memories.png",
+  "/screenshots/home.png",
+  "/screenshots/memories.png"
 ];
 
 // Install
