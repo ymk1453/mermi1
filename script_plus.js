@@ -387,11 +387,27 @@ async function sha256(text) {
 }
 
 /* ---------- AUTH ---------- */
-function setAuthed(val) {
-  localStorage.setItem(STORAGE_KEYS.auth, val ? "1" : "0");
+function setAuthed(remember) {
+  // remember=true  -> kalıcı (localStorage)
+  // remember=false -> sadece bu sekme (sessionStorage)
+  sessionStorage.setItem(STORAGE_KEYS.auth, "1");
+  if (remember) {
+    localStorage.setItem(STORAGE_KEYS.auth, "1");
+  } else {
+    localStorage.removeItem(STORAGE_KEYS.auth);
+  }
 }
+
+function clearAuth() {
+  sessionStorage.removeItem(STORAGE_KEYS.auth);
+  localStorage.removeItem(STORAGE_KEYS.auth);
+}
+
 function isAuthed() {
-  return localStorage.getItem(STORAGE_KEYS.auth) === "1";
+  return (
+    sessionStorage.getItem(STORAGE_KEYS.auth) === "1" ||
+    localStorage.getItem(STORAGE_KEYS.auth) === "1"
+  );
 }
 
 function showLogin() {
@@ -448,7 +464,7 @@ async function checkLogin() {
 
 function logout() {
   stopSpecialCountdownTicker();
-setAuthed(false);
+clearAuth();
   const passEl = $("#loginPassword");
   const rememberEl = $("#rememberMe");
   if (passEl) passEl.value = "";
