@@ -354,6 +354,7 @@
             <h3>Yeni Gün Ekle</h3>
             <input type="text" id="specialName" placeholder="Örn: Tanışma Günü (buraya yaz)" />
             <input type="date" id="specialDate" />
+            <input type="file" id="specialImage" accept="image/*" />
 
             <div class="row mt12" style="justify-content:flex-start; flex-wrap:wrap;">
   <label class="checkbox" style="margin:0;">
@@ -410,7 +411,7 @@
             </select>
 
             <!-- JS'de kullanılıyor ama HTML'de yoktu: EKLENDİ -->
-            <input type="text" id="chatSearch" placeholder="Sohbette ara... (buraya yaz)" style="max-width:220px;" />
+            <input type="text" id="chatSearch2" placeholder="Sohbette ara... (buraya yaz)" style="max-width:220px;" />
 
             <button class="ghost" id="pinLastBtn" type="button">Son mesajı sabitle</button>
             <button class="ghost" id="clearChatBtn" type="button">Temizle</button>
@@ -473,7 +474,7 @@
 
             <div class="mt12">
               <h3 style="margin:12px 0 8px;">Son Skorlar</h3>
-              <div id="lastScores" class="list"></div>
+              <div id="lastScores" class="list" id="specialList"></div>
             </div>
 
             <p class="tiny muted">Oyun başlayınca kalp kaçacak. Tıklayıp yakala.</p>
@@ -781,7 +782,11 @@
     </div>
   </div>
 
-  <script src="script_plus.js" defer></script>
+  
+  <!-- Firebase (compat) for shared realtime data -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase_config.js"></script>
 <!-- SUITE MODAL (features) -->
 <div id="suiteModal" class="modal" hidden>
   <div class="modal-inner">

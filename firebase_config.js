@@ -1,3 +1,5 @@
+/* FIREBASE_GUARD_V22 */
+try{window.__fb_ok=true;}catch(_){ }
 // Firebase config (BU DOSYAYI DOLDUR)
 // Firebase Console > Project settings > Your apps (Web) > Config
 // Bu dosya PUBLIC olabilir; Firebase config gizli şifre değildir.

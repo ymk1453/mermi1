@@ -1,0 +1,7 @@
+{
+  "notes": [
+    "index.html: removed stray \\1 artifacts; deduped firebase_config.js include; added special image input/button id",
+    "style_plus.css: privacy-on targets #app; overflow/responsive fixes",
+    "script_plus.js: SAFE_RUN + boot auth guard; added specials image support; added optional Firestore shared sync; added placeholder svg asset"
+  ]
+}

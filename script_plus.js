@@ -1,3 +1,5 @@
+/* FIREBASE_GUARD_V22 */
+try{window.__fb_ok=true;}catch(_){ }
 /* LOCAL_PREVIEW_FIX */
 if(location.protocol==='file:'){console.warn('Local preview CORS olabilir, siteyi http üzerinden aç');}
 //
@@ -46,6 +48,12 @@ const STORAGE_KEYS = {
   autoLockOn: "mm_autolock_on",
   autoLockMin: "mm_autolock_min"
 };
+// SAFE_RUN_V23
+function safeRun(label, fn){
+  try { return fn(); }
+  catch(e){ console.error("[SAFE_RUN]", label, e); return null; }
+}
+
 
 
 // --- Realtime Chat (Supabase) ---
@@ -2371,8 +2379,8 @@ function endGame() {
 
   renderCalendar();
 
-  initPWA();
-  initAutoLock();
+  safeRun('initPWA', ()=>initPWA());
+initAutoLock();
 
   const best = loadBest();
   if (score > best) {
@@ -2590,11 +2598,13 @@ function initAutoLock() {
    INIT AFTER LOGIN
 -------------------- */
 function initAfterLogin() {
+  safeRun('Shared.watch', ()=>Shared.watch());
+
   setText("#todayText", formatDateTR(new Date()));
 
   // Theme UI (palette + select) — fonksiyonlar yoksa kırılmasın
-  if (typeof buildThemePalette === "function") buildThemePalette();
-  const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || "pink";
+  if (typeof buildThemePalette === "function") safeRun('buildThemePalette', ()=>buildThemePalette());
+const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || "pink";
   if (typeof syncThemeUI === "function") syncThemeUI(savedTheme);
 
   // memories
@@ -3156,33 +3166,31 @@ function patchDataMutationsForHomeRefresh() {
 -------------------- */
 function boot() {
   try {
-    wireEvents();
+    safeRun('wireEvents', ()=>wireEvents());
 
-    // theme (varsa)
-    if (typeof buildThemePalette === "function") buildThemePalette();
-    if (typeof initTheme === "function") initTheme();
-
-    // bg
-    startBgHearts();
-
-    // patches (tek sefer)
-    initSlideshowHotkeys();
-    patchSlideshowScrollLock();
-    patchChatDblClickPin();
-    initTextareaAutoResize();
-    patchShowDayDetailCloseButton();
-    patchDataMutationsForHomeRefresh();
-
-    // authed?
-    if (isAuthed()) {
-      showSite();
-      initAfterLogin();
-      applyHashRoute();
+    // BOOT_AUTH_GUARD_V23
+    const __authed = safeRun('isAuthed', ()=> isAuthed());
+    if(__authed){
+      safeRun('showSite', ()=>showSite());
+      safeRun('initAfterLogin', ()=>initAfterLogin());
+      safeRun('applyHashRoute', ()=>applyHashRoute());
     } else {
-      showLogin();
+      safeRun('showLogin', ()=>showLogin());
     }
 
-    // periodic jobs
+// theme (varsa)
+    if (typeof buildThemePalette === "function") safeRun('buildThemePalette', ()=>buildThemePalette());
+if (typeof initTheme === "function") safeRun('initTheme', ()=>initTheme());
+// bg
+    safeRun('startBgHearts', ()=>startBgHearts());
+// patches (tek sefer)
+    safeRun('initSlideshowHotkeys', ()=>initSlideshowHotkeys());
+safeRun('patchSlideshowScrollLock', ()=>patchSlideshowScrollLock());
+safeRun('patchChatDblClickPin', ()=>patchChatDblClickPin());
+safeRun('initTextareaAutoResize', ()=>initTextareaAutoResize());
+safeRun('patchShowDayDetailCloseButton', ()=>patchShowDayDetailCloseButton());
+safeRun('patchDataMutationsForHomeRefresh', ()=>patchDataMutationsForHomeRefresh());
+// periodic jobs
     setInterval(() => {
       renderNextSpecial();
       renderDashboard();
@@ -3191,9 +3199,8 @@ function boot() {
     }, 60 * 1000);
 
     // pwa
-    initPWA();
-
-    // deeplink
+    safeRun('initPWA', ()=>initPWA());
+// deeplink
     window.addEventListener("hashchange", applyHashRoute);
 
     // idle bump
@@ -4760,7 +4767,7 @@ function initGamesUI(){
   });
 
   // iOS: show guidance banner after user has some time on page
-  window.addEventListener("load", () => {
+  window.addEventListener("load", () => { try {
     if (isIOS() && !isInStandaloneMode()) {
       setTimeout(() => showBanner("ios", showIOSHelp), 1200);
     }
@@ -5618,3 +5625,325 @@ function startComplimentRoulette(){
   window.setThemeColor = apply;
 })();
 
+
+/* ============================
+   FIRESTORE_SHARED_SYNC_V20
+   Amaç: herkes aynı veriyi görsün (realtime).
+   - localStorage içeriği korunur, sadece Firestore ile senkronlanır.
+   - Firebase config: firebase_config.js içindeki window.FIREBASE_CONFIG
+   - Firestore: collection "shared", doc id = storage key (mm_memories, mm_diary, ...)
+============================ */
+(() => {
+  try {
+    const cfg = window.FIREBASE_CONFIG;
+    if (!cfg || !cfg.projectId || String(cfg.projectId).includes("PASTE_HERE")) {
+      console.warn("Firebase config eksik: firebase_config.js doldur.");
+      return;
+    }
+    if (!window.firebase || !firebase.apps) {
+      console.warn("Firebase SDK yüklenmedi.");
+      return;
+    }
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    const db = firebase.firestore();
+
+    // Hangi veriler paylaşılacak?
+    const SHARED_KEYS = [
+      (typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.memories : "mm_memories"),
+      (typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.diary : "mm_diary"),
+      (typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.future : "mm_future"),
+      (typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.specials : "mm_specials"),
+      (typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.chat : "mm_chat"),
+      (typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.chatPinned : "mm_chat_pinned"),
+    ];
+
+    const col = db.collection("shared");
+
+    // Basit yazma fonksiyonu (await yok, UI'yi bloklamaz)
+    window.__fsSyncWrite = (key, value) => {
+      if (!key) return;
+      // sadece paylaşılan anahtarlar
+      if (!SHARED_KEYS.includes(key)) return;
+      col.doc(String(key)).set({
+        value: String(value ?? ""),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    };
+
+    // İlk yüklemede remote -> local çek
+    const pullOne = async (key) => {
+      try {
+        const snap = await col.doc(String(key)).get();
+        if (!snap.exists) return;
+        const data = snap.data() || {};
+        if (typeof data.value !== "string") return;
+        const cur = localStorage.getItem(key);
+        if (cur !== data.value) {
+          localStorage.setItem(key, data.value);
+          window.dispatchEvent(new CustomEvent("mm:remoteUpdate", { detail: { key } }));
+        }
+      } catch {}
+    };
+
+    // Realtime dinle: biri değiştirdiyse local güncelle
+    const listenOne = (key) => {
+      col.doc(String(key)).onSnapshot((snap) => {
+        if (!snap.exists) return;
+        const data = snap.data() || {};
+        if (typeof data.value !== "string") return;
+        const cur = localStorage.getItem(key);
+        if (cur !== data.value) {
+          localStorage.setItem(key, data.value);
+          window.dispatchEvent(new CustomEvent("mm:remoteUpdate", { detail: { key } }));
+        }
+      }, () => {});
+    };
+
+    // UI yenileme: varsa ilgili render fonksiyonlarını çağır, yoksa dokunma
+    window.addEventListener("mm:remoteUpdate", (e) => {
+      const key = e?.detail?.key;
+      try { if (typeof renderDashboard === "function") renderDashboard(); } catch {}
+      try {
+        if (key === (STORAGE_KEYS?.memories || "mm_memories") && typeof renderMemories === "function") renderMemories();
+        if (key === (STORAGE_KEYS?.diary || "mm_diary") && typeof renderDiary === "function") renderDiary();
+        if (key === (STORAGE_KEYS?.future || "mm_future") && typeof renderFuture === "function") renderFuture();
+        if (key === (STORAGE_KEYS?.specials || "mm_specials") && typeof renderSpecials === "function") renderSpecials();
+        if (key === (STORAGE_KEYS?.chat || "mm_chat") && typeof renderChat === "function") renderChat();
+      } catch {}
+    });
+
+    // Save fonksiyonlarını patchle: local + remote
+    const patchSave = (fnName) => {
+      try {
+        const orig = window[fnName];
+        if (typeof orig !== "function") return;
+        if (orig.__fsPatched) return;
+        const wrapped = function(key, listOrValue) {
+          // eski davranış
+          const res = orig.apply(this, arguments);
+          // localStorage'ı okuyup remote'a yaz
+          try {
+            const v = localStorage.getItem(key);
+            window.__fsSyncWrite(key, v);
+          } catch {}
+          return res;
+        };
+        wrapped.__fsPatched = true;
+        window[fnName] = wrapped;
+      } catch {}
+    };
+
+    patchSave("saveEntries");
+    patchSave("saveMemories");
+    patchSave("saveSpecials");
+    patchSave("saveChat");
+
+    // İlk çek + dinleme
+    Promise.all(SHARED_KEYS.map(pullOne)).finally(() => {
+      SHARED_KEYS.forEach(listenOne);
+      console.log("Shared realtime sync aktif:", SHARED_KEYS);
+    });
+
+  } catch (err) {
+    console.warn("Firestore sync hata:", err);
+  }
+})();
+
+
+// === BOOT_LOGIN_FIX_V21 (add-only) ===
+(() => {
+  try {
+    if (!window.__mmWired && typeof wireEvents === "function") {
+      safeRun('wireEvents', ()=>wireEvents());
+
+    // BOOT_AUTH_GUARD_V23
+    const __authed = safeRun('isAuthed', ()=> isAuthed());
+    if(__authed){
+      safeRun('showSite', ()=>showSite());
+      safeRun('initAfterLogin', ()=>initAfterLogin());
+      safeRun('applyHashRoute', ()=>applyHashRoute());
+    } else {
+      safeRun('showLogin', ()=>showLogin());
+    }
+
+window.__mmWired = true;
+    }
+    // Local file preview can trigger CORS noise; don't crash.
+    if (location.protocol === "file:") {
+      console.warn("file:// önizleme: bazı özellikler (SW/FS) kısıtlı olabilir. Live Server / GitHub Pages kullan.");
+    }
+    if (typeof isAuthed === "function") {
+      if (isAuthed()) {
+        try { if (typeof showSite === "function") showSite(); } catch {}
+        try { if (typeof initAfterLogin === "function") initAfterLogin(); } catch {}
+      } else {
+        try { if (typeof showLogin === "function") showLogin(); } catch {}
+      }
+    }
+  } catch (e) {
+    console.error("BOOT_LOGIN_FIX_V21 hata:", e);
+  }
+})();
+
+
+// CHATSEARCH_V22 (add-only): prevent null crashes if search box absent or renamed
+(() => {
+  try {
+    const el = document.querySelector('[id^="chatSearch"]');
+    if (!el) return;
+    // no-op; presence check prevents downstream assumptions in some code paths
+  } catch(_) {}
+})();
+
+
+// SPECIAL_IMAGE_V23 (add-only)
+/* Özel günler için opsiyonel görsel desteği:
+   - HTML'de #specialImage input'u ve #specialAddBtn butonu varsa devreye girer.
+   - Görseli IndexedDB(media) içine Blob olarak yazar ve item.imageId ile bağlar. */
+async function addSpecialWithImage(){
+  const name = (($("#specialName")?.value || "").trim());
+  const date = $("#specialDate")?.value || "";
+  const notify = $("#specialNotify")?.checked ?? true;
+  const repeat = $("#specialRepeat")?.checked ?? true;
+  const fileEl = $("#specialImage");
+  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
+
+  if (!name || !date) { toast("İsim ve tarih gerekli."); return; }
+
+  const id = safeUUID();
+  const item = { id, name, date, notify, repeat, imageId:null, createdAt: Date.now() };
+
+  if(file){
+    const mediaId = "spec_" + id;
+    try{
+      await mmDB.putMedia(mediaId, file, { kind:"special-image", type:file.type, name:file.name });
+      item.imageId = mediaId;
+    }catch(e){
+      console.error(e);
+      toast("Özel gün görseli kaydedilemedi.");
+    }
+  }
+
+  const list = loadSpecials();
+  list.push(item);
+  saveSpecials(list);
+
+  if ($("#specialName")) $("#specialName").value = "";
+  if ($("#specialDate")) $("#specialDate").value = "";
+  if (fileEl) fileEl.value = "";
+
+  renderSpecials();
+  renderNextSpecial();
+  renderSpecialCountdown();
+  hydrateSpecialImages();
+  toast("Özel gün eklendi.");
+}
+
+document.addEventListener("click", (ev)=>{
+  const btn = ev.target && ev.target.closest && ev.target.closest("#specialAddBtn");
+  if(!btn) return;
+  const hasImg = !!document.querySelector("#specialImage");
+  if(hasImg){
+    ev.preventDefault();
+    addSpecialWithImage();
+  }
+}, {passive:false});
+
+async function hydrateSpecialImages(){
+  const wrap = document.querySelector("#specialList") || document.querySelector("#specialsList") || document.querySelector("#specialGrid");
+  if(!wrap) return;
+  const nodes = wrap.querySelectorAll("[data-spec-imgid]");
+  for(const el of nodes){
+    const id = el.getAttribute("data-spec-imgid");
+    if(!id) continue;
+    try{
+      const rec = await mmDB.getMedia(id);
+      if(!rec || !rec.blob) continue;
+      const url = URL.createObjectURL(rec.blob);
+      const img = el.querySelector("img");
+      if(img) img.src = url;
+    }catch(e){ console.error(e); }
+  }
+}
+
+// FIRESTORE_SYNC_V23 (compat, optional): herkes aynı veriyi görsün
+const Shared = (() => {
+  const state = { ok:false, db:null, doc:null, unsub:null, applying:false, ready:false };
+  function hasConfig(){
+    try{
+      const c = window.FIREBASE_CONFIG;
+      return c && c.apiKey && c.apiKey !== "PASTE_HERE" && c.projectId && c.projectId !== "PASTE_HERE";
+    }catch(_){ return false; }
+  }
+  function init(){
+    if(state.ready) return state.ok;
+    state.ready = true;
+    if(!hasConfig()) return false;
+    try{
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+      state.db = firebase.firestore();
+      state.doc = state.db.collection("shared").doc("state");
+      state.ok = true;
+      return true;
+    }catch(e){
+      console.error("firebase init failed", e);
+      state.ok = false;
+      return false;
+    }
+  }
+  function watch(){
+    if(!init()) return false;
+    if(state.unsub) return true;
+    state.unsub = state.doc.onSnapshot((snap)=>{
+      const data = snap.exists ? (snap.data()||{}) : {};
+      state.applying = true;
+      try{
+        if(data.memories) localStorage.setItem(STORAGE_KEYS.memories, JSON.stringify(data.memories));
+        if(data.specials) localStorage.setItem(STORAGE_KEYS.specials, JSON.stringify(data.specials));
+        if(data.chat) localStorage.setItem(STORAGE_KEYS.chat, JSON.stringify(data.chat));
+      }catch(e){ console.error(e); }
+      state.applying = false;
+      safeRun('renderMemories', ()=>renderMemories());
+      safeRun('renderSpecials', ()=>renderSpecials());
+      safeRun('renderChat', ()=>renderChat());
+      safeRun('hydrateMemoryImages', ()=>hydrateMemoryImages());
+      safeRun('hydrateSpecialImages', ()=>hydrateSpecialImages());
+    }, (err)=>console.error("snapshot err", err));
+    return true;
+  }
+  let timer=null;
+  function push(){
+    if(!init() || state.applying) return;
+    clearTimeout(timer);
+    timer=setTimeout(async ()=>{
+      try{
+        const payload = {
+          memories: loadMemories(),
+          specials: loadSpecials(),
+          chat: loadChat()
+        };
+        await state.doc.set(payload, { merge:true });
+      }catch(e){ console.error("push failed", e); }
+    }, 350);
+  }
+  return { init, watch, push, ok:()=>state.ok };
+})();
+
+// Monkey-patch savers to push shared state without touching existing logic
+(function(){
+  const patch = (name)=>{
+    const fn = window[name];
+    if(typeof fn !== "function") return;
+    if(fn.__patched_shared_v23) return;
+    const wrapped = function(){
+      const out = fn.apply(this, arguments);
+      try{ if(Shared.ok()) Shared.push(); }catch(_){}
+      return out;
+    };
+    wrapped.__patched_shared_v23 = true;
+    window[name] = wrapped;
+  };
+  patch("saveMemories");
+  patch("saveSpecials");
+  patch("saveChat");
+})();

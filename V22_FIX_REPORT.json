@@ -1,0 +1,9 @@
+{
+  "html": [
+    "index.html"
+  ],
+  "js": [
+    "script_plus.js",
+    "firebase_config.js"
+  ]
+}
