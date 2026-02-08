@@ -4767,10 +4767,12 @@ function initGamesUI(){
   });
 
   // iOS: show guidance banner after user has some time on page
-  window.addEventListener("load", () => { try {
-    if (isIOS() && !isInStandaloneMode()) {
-      setTimeout(() => showBanner("ios", showIOSHelp), 1200);
-    }
+  window.addEventListener("load", () => {
+    try {
+      if (isIOS() && !isInStandaloneMode()) {
+        setTimeout(() => showBanner("ios", showIOSHelp), 1200);
+      }
+    } catch (_) {}
   });
 })();
 
@@ -5946,4 +5948,17 @@ const Shared = (() => {
   patch("saveMemories");
   patch("saveSpecials");
   patch("saveChat");
+})();
+
+
+/* BOOT_AUTOSTART_V24 */
+(() => {
+  const start = () => {
+    try { if (typeof boot === 'function') boot(); } catch(e) { console.error('boot failed', e); }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
 })();

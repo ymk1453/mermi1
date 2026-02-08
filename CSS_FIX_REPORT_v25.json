@@ -1,0 +1,9 @@
+{
+  "css_href": "style_plus.css",
+  "patched": [
+    "index.html",
+    "index_plus.html",
+    "offline.html",
+    "404.html"
+  ]
+}
