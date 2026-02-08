@@ -1,0 +1,10 @@
+{
+  "version": "v14-theme-fix",
+  "css_changed": [
+    "style_plus.css"
+  ],
+  "js_changed": [
+    "script_plus.js"
+  ],
+  "html_changed": []
+}

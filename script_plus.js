@@ -1,3 +1,5 @@
+/* LOCAL_PREVIEW_FIX */
+if(location.protocol==='file:'){console.warn('Local preview CORS olabilir, siteyi http üzerinden aç');}
 //
 
 /* --------------------
@@ -5459,15 +5461,6 @@ function startComplimentRoulette(){
 }
 
 
-// soft time based theme (non-invasive)
-(() => {
-  const h = new Date().getHours();
-  const root = document.documentElement;
-  if (h >= 20 || h < 6) {
-    root.style.setProperty('--bg-soft', '#121212');
-  }
-})();
-
 // === MODE SYSTEM (ADD-ONLY) ===
 (() => {
   const MODES=['default','sade','odak','gizlilik','rituel'];
@@ -5536,3 +5529,92 @@ function startComplimentRoulette(){
   skip?.addEventListener('click', close);
   overlay?.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
 })();
+
+
+
+// THEME_ENGINE_V15 (palette-based, fixes locked backgrounds)
+(() => {
+  const KEY = 'theme_color_v15';
+
+  const clamp = (n) => Math.max(0, Math.min(255, n));
+  const hexToRgb = (hex) => {
+    const h = (hex || '').replace('#','').trim();
+    if (h.length !== 6) return null;
+    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+  };
+  const rgbToHex = ({r,g,b}) => '#' + [r,g,b].map(v=>clamp(v).toString(16).padStart(2,'0')).join('');
+  const mix = (a, b, t) => rgbToHex({
+    r: Math.round(a.r + (b.r - a.r)*t),
+    g: Math.round(a.g + (b.g - a.g)*t),
+    b: Math.round(a.b + (b.b - a.b)*t),
+  });
+  const luminance = ({r,g,b}) => {
+    const srgb = [r,g,b].map(v=>v/255).map(v=> (v<=0.03928)?(v/12.92):Math.pow((v+0.055)/1.055,2.4));
+    return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
+  };
+
+  const apply = (baseHex) => {
+    const base = hexToRgb(baseHex);
+    if (!base) return;
+
+    const white = {r:255,g:255,b:255};
+    const black = {r:0,g:0,b:0};
+
+    // Build a 3-step background palette
+    // For bright colors: gently darken; for dark colors: gently lighten.
+    const L = luminance(base);
+    const bg1 = (L > 0.55) ? mix(base, black, 0.75) : mix(base, black, 0.35);
+    const bg2 = (L > 0.55) ? mix(base, black, 0.70) : mix(base, black, 0.25);
+    const bg3 = (L > 0.55) ? mix(base, black, 0.62) : mix(base, white, 0.10);
+
+    // Foreground
+    const fg = (luminance(hexToRgb(bg2)) > 0.45) ? '#000000' : '#ffffff';
+
+    // Card/stroke tuning by brightness
+    const card = (fg === '#000000') ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.10)';
+    const card2 = (fg === '#000000') ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.14)';
+    const stroke = (fg === '#000000') ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.16)';
+    const muted = (fg === '#000000') ? 'rgba(0,0,0,0.70)' : 'rgba(255,255,255,0.85)';
+
+    const root = document.documentElement;
+    root.style.setProperty('--bg1', bg1);
+    root.style.setProperty('--bg2', bg2);
+    root.style.setProperty('--bg3', bg3);
+    root.style.setProperty('--text', fg);
+    root.style.setProperty('--muted', muted);
+    root.style.setProperty('--card', card);
+    root.style.setProperty('--card2', card2);
+    root.style.setProperty('--stroke', stroke);
+
+    try { localStorage.setItem(KEY, baseHex); } catch(_) {}
+  };
+
+  // Load saved
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch(_) {}
+  if (saved) apply(saved);
+
+  // Hook existing color pickers / buttons
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (!t) return;
+    if (t.matches('input[type="color"][data-theme-picker]') || t.id === 'themeColor' || t.name === 'themeColor') {
+      apply(t.value);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-theme-bg]');
+    if (el) apply(el.getAttribute('data-theme-bg'));
+  });
+
+  // Night default if none
+  if (!saved) {
+    const h = new Date().getHours();
+    if (h >= 20 || h < 6) apply('#121212');
+  }
+
+  // expose
+  window.setThemeColor = apply;
+})();
+

@@ -377,16 +377,16 @@ body.theme-slate{
    BASE
 -------------------- */
 *{ box-sizing:border-box; }
-html, body{ height:100%; }
-
+html, body{
+height:100%;
+}
 body{
-  margin:0;
+margin:0;
   font-family:"Segoe UI","Poppins",system-ui,-apple-system,Arial,sans-serif;
   color: var(--text);
-  background: linear-gradient(180deg,var(--bg1),var(--bg2),var(--bg3));
+
   overflow-x:hidden;
 }
-
 .sr-only{
   position:absolute;
   width:1px;height:1px;
@@ -1505,12 +1505,8 @@ button:active, .btn:active {
 
 /* --- time based background --- */
 :root {
-  --bg-soft: #f6f6f6;
+  
 }
-body {
-  background: var(--bg-soft);
-}
-
 /* --- easter egg --- */
 .logo:active {
   filter: brightness(1.1);
@@ -1616,3 +1612,52 @@ button.primary, .btn.primary{
 .onboard-dots{ display:flex; gap:6px; margin: 10px 0 0 0; opacity:.7; }
 .onboard-dot{ width:6px; height:6px; border-radius:50%; border:1px solid rgba(255,255,255,.35); }
 .onboard-dot.on{ background: rgba(255,255,255,.55); }
+
+/* THEME_ENGINE_V15 */
+/* Background uses palette tokens (--bg1/--bg2/--bg3). Theme picker updates these vars. */
+:root{
+  /* fallback palette (night) */
+  --bg1:#0f0f10;
+  --bg2:#151517;
+  --bg3:#1b1b1f;
+  --text:#ffffff;
+  --muted: rgba(255,255,255,0.85);
+  --card: rgba(255,255,255,0.10);
+  --card2: rgba(255,255,255,0.14);
+  --stroke: rgba(255,255,255,0.16);
+}
+body{
+  /* layered calm background */
+  background:
+    radial-gradient(900px 600px at 18% 12%, color-mix(in oklab, var(--bg3) 65%, transparent) 0%, transparent 70%),
+    radial-gradient(900px 600px at 82% 20%, color-mix(in oklab, var(--bg2) 55%, transparent) 0%, transparent 70%),
+    linear-gradient(160deg, var(--bg2), var(--bg1)) !important;
+  color: var(--text);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+
+/* PINK_MENU_FIX_V19 */
+:root{
+  --theme-accent: var(--theme-bg, #9aa);
+}
+/* top buttons / tabs / pills */
+nav button, nav .btn, .tabs button, .tab, .pill, .menu button, .menu .btn, .topbar button{
+  background: color-mix(in srgb, var(--theme-accent) 22%, rgba(255,255,255,0) 78%);
+  border-color: color-mix(in srgb, var(--theme-accent) 35%, rgba(255,255,255,0) 65%);
+}
+nav button:hover, nav .btn:hover, .tabs button:hover, .tab:hover, .pill:hover, .menu button:hover, .menu .btn:hover, .topbar button:hover{
+  background: color-mix(in srgb, var(--theme-accent) 30%, rgba(255,255,255,0) 70%);
+}
+nav button.active, .tabs button.active, .tab.active, .pill.active{
+  background: color-mix(in srgb, var(--theme-accent) 40%, rgba(255,255,255,0) 60%);
+  border-color: color-mix(in srgb, var(--theme-accent) 55%, rgba(255,255,255,0) 45%);
+}
+/* fallback for browsers without color-mix */
+@supports not (background: color-mix(in srgb, #000 50%, #fff 50%)) {
+  nav button, nav .btn, .tabs button, .tab, .pill, .menu button, .menu .btn, .topbar button{
+    background: rgba(255,255,255,.06);
+    border-color: rgba(255,255,255,.18);
+  }
+}
+

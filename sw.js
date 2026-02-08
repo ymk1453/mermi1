@@ -1,3 +1,5 @@
+/* LOCAL_PREVIEW_FIX */
+if(location.protocol==='file:'){console.warn('Local preview CORS olabilir, siteyi http üzerinden aç');}
 /* Service Worker - Mevra ❤️ Mizra PWA
    Update-safe, path-correct.
 

@@ -1,0 +1,52 @@
+{
+  "version": "v12",
+  "files_total": 20,
+  "html_files": 4,
+  "css_files": 1,
+  "js_files": 2,
+  "issues_found": {
+    "missing_assets": 0,
+    "duplicate_tags": 0,
+    "sw_manifest": 6,
+    "accessibility": 0,
+    "misc": 0
+  },
+  "issues_detail": {
+    "missing_assets": [],
+    "duplicate_tags": [],
+    "sw_manifest": [
+      {
+        "html": "404.html",
+        "fix": "added manifest link"
+      },
+      {
+        "html": "404.html",
+        "fix": "added theme-color meta"
+      },
+      {
+        "html": "index_plus.html",
+        "fix": "added manifest link"
+      },
+      {
+        "html": "index_plus.html",
+        "fix": "added theme-color meta"
+      },
+      {
+        "html": "offline.html",
+        "fix": "added manifest link"
+      },
+      {
+        "html": "offline.html",
+        "fix": "added theme-color meta"
+      }
+    ],
+    "accessibility": [],
+    "misc": []
+  },
+  "files_changed": [
+    "404.html",
+    "index.html",
+    "index_plus.html",
+    "offline.html"
+  ]
+}

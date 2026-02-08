@@ -240,7 +240,7 @@
 
             <div class="field">
               <label class="label" for="memoryText">Açıklama</label>
-              <textarea id="memoryText" maxlength="1200" placeholder="Anı açıklaması (buraya yaz)"></textarea>
+              <textarea id="memoryText" maxlength="1200" placeholder="Anı açıklaması (buraya yaz)" aria-label="Metin alanı"></textarea>
               <div class="row tiny muted" style="justify-content:space-between;">
                 <span>Markdown destek: **kalın**, *italik*, `kod`.</span>
                 <span id="memoryTextCount">0/1200</span>
@@ -326,7 +326,7 @@
             <div class="row" style="justify-content:flex-start;">
               <input type="text" id="diaryTitle" placeholder="Başlık (opsiyonel) (buraya yaz)" />
             </div>
-            <textarea id="diaryText" placeholder="Bugün ne hissettin? (buraya yaz)"></textarea>
+            <textarea id="diaryText" placeholder="Bugün ne hissettin? (buraya yaz)" aria-label="Metin alanı"></textarea>
 
             <div id="diaryPreview" class="preview mt12" hidden></div>
 
@@ -424,7 +424,7 @@
           <div id="chatBox" class="chatbox mt12" aria-label="Sohbet kutusu"></div>
 
           <div class="chatbar">
-            <textarea id="chatInput" rows="3" placeholder="Mesaj yaz (Enter ile gönder • Shift+Enter = satır) (buraya yaz)"></textarea>
+            <textarea id="chatInput" rows="3" placeholder="Mesaj yaz (Enter ile gönder • Shift+Enter = satır) (buraya yaz)" aria-label="Metin alanı"></textarea>
             <button class="primary" id="sendChatBtn" type="button">Gönder</button>
           </div>
 
@@ -577,7 +577,7 @@
           <div class="card">
             <h3>Düzenleyici</h3>
             <input type="text" id="futureTitle" placeholder="Başlık (opsiyonel) (buraya yaz)" />
-            <textarea id="futureText" placeholder="Geleceğe not... (buraya yaz)"></textarea>
+            <textarea id="futureText" placeholder="Geleceğe not... (buraya yaz)" aria-label="Metin alanı"></textarea>
 
             <div id="futurePreview" class="preview mt12" hidden></div>
 
@@ -877,7 +877,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="field mt12">
         <label class="label" for="capsuleText">Mesaj</label>
-        <textarea id="capsuleText" maxlength="2000" placeholder="Geleceğe mesaj... (buraya yaz)"></textarea>
+        <textarea id="capsuleText" maxlength="2000" placeholder="Geleceğe mesaj... (buraya yaz)" aria-label="Metin alanı"></textarea>
       </div>
       <div class="row mt12" style="justify-content:flex-start; gap:10px; flex-wrap:wrap;">
         <button class="primary" id="capsuleAddBtn" type="button">Kapsül Oluştur</button>
