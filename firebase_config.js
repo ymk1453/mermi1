@@ -1,13 +1,8 @@
-/* FIREBASE_GUARD_V22 */
-try{window.__fb_ok=true;}catch(_){ }
-// Firebase config (BU DOSYAYI DOLDUR)
-// Firebase Console > Project settings > Your apps (Web) > Config
-// Bu dosya PUBLIC olabilir; Firebase config gizli şifre değildir.
 window.FIREBASE_CONFIG = {
-  apiKey: "PASTE_HERE",
-  authDomain: "PASTE_HERE",
-  projectId: "PASTE_HERE",
-  storageBucket: "PASTE_HERE",
-  messagingSenderId: "PASTE_HERE",
-  appId: "PASTE_HERE"
+  apiKey: "AIzaSyC3G2lV2TqxrbnlA4bHZ-mACYIJ_v8bGXY",
+  authDomain: "mermi-site.firebaseapp.com",
+  projectId: "mermi-site",
+  storageBucket: "mermi-site.firebasestorage.app",
+  messagingSenderId: "294430450411",
+  appId: "1:294430450411:web:f76b796b1ff1ee844654ae"
 };
